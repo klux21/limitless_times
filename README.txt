@@ -11,6 +11,14 @@ The wrappers for gmtime_r, mkgmtime, mktime and localtime_r here can handle
 Gregorian time even back to the age of dinosaur and also the same time span
 ahead in the future.
 
+Thread safety is is till an issue in new_mktime() and new_localtime_r()
+because that caring of an environment parameter like TZ which that can be
+adjusted at runtime requires updates of some pre-calculated values which
+contain the time-zone information.
+For being thread safe you need to call new_mktime() or vInitTimeZoneInfo()
+before creating any threads and prevent adjustments of the TZ environment
+variable afterwards.
+
 The support of the daylight saving rules are not that funny to implement but
 new_mktime and new localtime_r should handle them right as long as the
 environment variable TZ is set and conforms the Unix standard.

@@ -1,47 +1,48 @@
 limitless_times - time handling that overcome some annoying limits
 
-It did bother me that several time function are not only pretty slow but also
-that it's not even possible to use them to calculate my own age just because
-the implementations of functions like mktime or gmtime of most systems and C
-compilers are unable to handle dates before 1970 despite that the time_t value
-is a signed data type. So this bunch of functions are a thing that I did
+It did bother me that several time function are not only quite slow but also
+that it's not even possible to use those for the calculate my own age just
+because the implementations of functions like mktime or gmtime of most systems
+and C compilers are unable to handle dates before 1970 despite that the time_t
+value is a signed data type. So this bunch of functions are a thing that I did
 want to implement since a long time already.
 
-For this I wrote those wrappers for gmtime_r, mkgmtime, mktime and
-localtime_r now which can handle Gregorian times even back to the age of
-dinosaur and also the same time span ahead in the future.
+The wrappers for gmtime_r, mkgmtime, mktime and localtime_r here can handle
+Gregorian time even back to the age of dinosaur and also the same time span
+ahead in the future.
 
-The daylight saving rules are not that funny to implement but new_mktime and
-new localtime_r should handle them right as long as the TZ is set and conforms
-the Unix standard.
-However the strings in Unix format are searched in /etc/localtime if TZ referes
-to a file there as common in many Unix systems. But the algorythm doesn't cares
-the true binary format of the time zone data base but looks for the TZ value
-at the end of that file only. This hack should work in Linux and BSD for the
-most countries and time zones but ignores the big bunch of the historical
-daylight saving time rules which may apply in case of historical times.
+The support of the daylight saving rules are not that funny to implement but
+new_mktime and new localtime_r should handle them right as long as the
+environment variable TZ is set and conforms the Unix standard.
 
-But I doubt that any of us will go back in time for enjoying those old days
-again and for this it shouldn't be a big problem. Be aware that functions don't
-care about any leap seconds as well. Those are applied at random times for
-adjusting the Gregorian time against the UTC time a bit but a Gregorian year
-has an even bigger deviation from an average tropical year either and leap
+The values right searched in /etc/localtime if TZ referes to a file there as
+common in many Unix systems. The algorythm doesn't cares the true binary
+format of the time zone data base files but looks for the TZ value
+at the end of that file only. This hack should work in Linux and BSD for most
+countries and time zones but the big bunch of the historical daylight saving
+time rules which may apply in case of historical times are still ignored.
+
+Of course I doubt that any of us will go back in time for enjoying those old
+days again and for this it shouldn't be a big problem. Be aware that functions
+don't care about any leap seconds as well. Those are applied at random times
+for adjusting the Gregorian time against the UTC time a bit but a Gregorian
+year has an even bigger deviation from an average tropical year either and leap
 seconds can't fix the deviation problems that the GPS and other navigation
-systems face either.
-For being Unix conform it's required too that
+systems face either. For being Unix standard conform it's required as well that
 "As represented in seconds since the Epoch, each and every day shall be
 accounted for by exactly 86400 seconds."
 ( https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15 )
 For this the implementations of the the most systems ignore leap seconds and
-I guess it's pretty OK to ignore them as well.
+I guess it's pretty OK to ignore leap seconds as well.
 The Gregorian year lasts currently a bit longer than a tropical year either
 but in a few ten thousend years in the future after the earth rotation has
-slowed down a bit more the the time will match it's rotation again and for this
-it seems to be a rather academic problem of some nitpickers only who have no
-patience to wait a little bit.
+slowed down a bit more then the time will match it's rotation again and for
+this it seems to be a rather academic problem of some nitpickers only who have
+no patience to wait a little bit.
 
-For testing the functions you may execute the test_times.c as shell script in
-a Linux or BSD System where you have access the compiler.
+For testing the functions and comparing the speed with the compiler build-in
+functions you may execute the test_times.c as shell script in a Linux or BSD
+system where you have access the compiler.
 
 Why that 'Civil Usage Public License'?
 The license is kind a mix of the conditions of BSD or Apache license but in

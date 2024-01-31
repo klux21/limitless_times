@@ -498,10 +498,10 @@ Exit:;
 
 
 /* ------------------------------------------------------------------------- *\
-   vInitTimeZoneInfo initializes or reinitializes the timezone information
+   udate_time_zone_info initializes or reinitializes the timezone information
    that is used for new_mktime and new_localtime_r according to the current
-   system settings. The function is not yet thread safe according accessing
-   our static timezone information!
+   system settings. The function is not yet thread safe because of our usage
+   of static timezone information!
 \* ------------------------------------------------------------------------- */
 
 typedef struct _TIME_ZONE_RULE TIME_ZONE_RULE;
@@ -859,13 +859,14 @@ static int b_read_TZ (TIME_ZONE_INFO *pzi, const char * pTZ)
 
 
 /* ------------------------------------------------------------------------- *\
-   vInitTimeZoneInfo initializes or reinitializes the timezone information
+   udate_time_zone_info initializes or reinitializes the timezone information
    that is used for new_mktime and new_localtime_r according to the current
-   system settings. The function is not thread safe implemented
-   and requires TZ being set as specified in the Unix standard.
+   system settings. The function is not thread safe regarding our usage of
+   static timezone information and requires TZ being set as specified in the
+   Unix standard.
 \* ------------------------------------------------------------------------- */
 
-void vInitTimeZoneInfo()
+void udate_time_zone_info()
 {/* Get time zone information from system */
    static char last_TZ[512];
    char * pTZ = getenv("TZ");
@@ -996,7 +997,7 @@ void vInitTimeZoneInfo()
 #endif /* _WIN32 */
 
    Exit:;
-} /* void vInitTimeZoneInfo() */
+} /* void udate_time_zone_info() */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -1040,7 +1041,7 @@ time_t new_mktime(struct tm * ptm)
       goto Exit;
    }
 
-   vInitTimeZoneInfo();
+   udate_time_zone_info();
 
    if (   ((ptm->tm_sec  < 0) || (ptm->tm_sec  > 60))
        || ((ptm->tm_min  < 0) || (ptm->tm_min  > 59))
@@ -1262,7 +1263,7 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
    int     isDaylightSaving = 0;
 
    if(!ti.type)
-      vInitTimeZoneInfo();
+      udate_time_zone_info();
 
    if(pt)
       utc_time = *pt;

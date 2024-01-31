@@ -5,7 +5,7 @@ that it's not even possible to use them to calculate my own age just because
 the implementations of functions like mktime or gmtime of most systems and C
 compilers are unable to handle dates before 1970 despite that the time_t value
 is a signed data type. So this bunch of functions are a thing that I did
-want to implement since a long time already.  
+want to implement since a long time already.
 
 For this I wrote those wrappers for gmtime_r, mkgmtime, mktime and
 localtime_r now which can handle Gregorian times even back to the age of
@@ -42,7 +42,7 @@ patience to wait a little bit.
 
 For testing the functions you may execute the test_times.c as shell script in
 a Linux or BSD System where you have access the compiler.
- 
+
 Why that 'Civil Usage Public License'?
 The license is kind a mix of the conditions of BSD or Apache license but in
 opposite to the former it prohibits any usage for weapons, spyware and secret
@@ -59,7 +59,7 @@ for sure a good idea to use the software legally only regarding the conditions
 of the license.
 Please be aware that this code is despite of this very permissive license not
 even partially public domain software! For this it's a very good idea to care
-about the license conditions. 
+about the license conditions.
 
 
 Kind regards,

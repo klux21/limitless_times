@@ -518,8 +518,8 @@ struct _TIME_ZONE_RULE
 
    char    zone_name[72]; /* name of that time zone e.g. "UTC" or "CET" */
 };
- 
-typedef struct _TIME_ZONE_INFO TIME_ZONE_INFO; 
+
+typedef struct _TIME_ZONE_INFO TIME_ZONE_INFO;
 struct _TIME_ZONE_INFO
 {
    TIME_ZONE_RULE standard; /* standard time rules */
@@ -652,7 +652,7 @@ static int b_read_TZ_zone_data (TIME_ZONE_RULE * ptr, int is_dst, char * psrc, c
 
 /* ------------------------------------------------------------------------- *\
    b_read_TZ_zone_data is a helper of b_read_TZ for reading the
-   daylight saving rules  
+   daylight saving rules
 \* ------------------------------------------------------------------------- */
 
 static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
@@ -778,12 +778,12 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
          if(*ps == ':')
          { /* seconds specified */
             ++ps;
-     
+
             if ((*ps < '0') || (*ps > '9'))
                goto Exit; /* TZ format error :o( */
-     
+
             seconds = *ps++ - '0';
-     
+
             if ((*ps >= '0') && (*ps <= '9'))
                seconds = (seconds * 10) + (*ps++ - '0');
 
@@ -796,9 +796,9 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
    ptr->mode     = mode;
    ptr->year_day = year_day;
    ptr->month    = month;
-   ptr->mweek    = mweek;   
-   ptr->wday     = wday;    
-   ptr->time     = (hour * 3600) + (minutes * 60) + seconds;    
+   ptr->mweek    = mweek;
+   ptr->wday     = wday;
+   ptr->time     = (hour * 3600) + (minutes * 60) + seconds;
 
    *ppend = ps;
 
@@ -849,7 +849,7 @@ static int b_read_TZ (TIME_ZONE_INFO *pzi, const char * pTZ)
        zi.type = 2; /* standard time if there is no following data */
    }
 
-   pzi->type = 0; 
+   pzi->type = 0;
    *pzi = zi;
    bRet = 1;
 
@@ -976,7 +976,7 @@ void vInitTimeZoneInfo()
          ti.daylight.mweek = tzi.DaylightDate.wDay;
          ti.daylight.wday  = tzi.DaylightDate.wDayOfWeek;
          ti.daylight.time  = tzi.DaylightDate.wHour * 3600;
- 
+
          ti.type = (ti.daylight.bias == ti.standard.bias) ? 1 : 2;
       }
       else
@@ -1142,7 +1142,7 @@ time_t new_mktime(struct tm * ptm)
 
    isDaylightSaving = ptm->tm_isdst;
 
-   if((isDaylightSaving < 0) && (ti.type > 1)) 
+   if((isDaylightSaving < 0) && (ti.type > 1))
    {
       TIME_ZONE_RULE * ptz;
       int32_t wday_year_start;

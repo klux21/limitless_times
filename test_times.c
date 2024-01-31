@@ -243,7 +243,7 @@ int test_speed()
       tt = mkgmtime(&stm);
    t1 = UnixTime() - t0;
    fprintf(stdout, "An average ______ mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
-#endif   
+#endif
 
    i  = 1000000;
    t0 = UnixTime();
@@ -310,21 +310,21 @@ int test_speed()
                         stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday );
       goto Exit;
    }
-   
+
    i  = 1000000;
    t0 = UnixTime();
-   while (i--) 
+   while (i--)
       new_localtime_r(&tt, &stm);
    t1 = UnixTime() - t0;
    fprintf(stdout, "An average new_localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
    t0 = UnixTime();
-   while (i--) 
+   while (i--)
       localtime_r(&tt, &otm);
    t1 = UnixTime() - t0;
    fprintf(stdout, "An average ___ localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
-   
+
    if(   (otm.tm_year  != stm.tm_year)
       || (otm.tm_mon   != stm.tm_mon) /* December */
       || (otm.tm_mday  != stm.tm_mday)

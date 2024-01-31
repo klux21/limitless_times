@@ -1,4 +1,4 @@
-limitless_times - time handling functions which overcomes some annoying limits
+limitless_times - time handling functions which overcome some annoying limits
 
 It did bother me that several time function are not only quite slow but also
 that it's not even possible to use those for the calculate my own age just

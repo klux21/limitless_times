@@ -166,7 +166,7 @@ time_t new_mkgmtime(struct tm * ptm);
 void update_time_zone_info();
 
 /* ------------------------------------------------------------------------- *\
-   new_mktime is a mktime implementation for Windows
+   new_mktime is a mktime implementation
 \* ------------------------------------------------------------------------- */
 time_t new_mktime(struct tm * ptm);
 
@@ -189,7 +189,7 @@ time_t new_mktime(struct tm * ptm);
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
 \* ------------------------------------------------------------------------- */
-struct tm * new_localtime_r(time_t * pt, struct tm * ptm);
+struct tm * new_localtime_r(const time_t * pt, struct tm * ptm);
 
 #ifdef localtime_r
 #undef localtime_r
@@ -197,6 +197,76 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm);
 
 #define localtime_r   new_localtime_r
 
+
+/* ========================================================================= *\
+   Time zone related stuff that simplifies the comparison and conversion
+   of times of different timezones
+\* ========================================================================= */
+
+/* ------------------------------------------------------------------------- *\
+   udate_time_zone_info initializes or reinitializes the timezone information
+   that is used for new_mktime and new_localtime_r according to the current
+   system settings. The function is not yet thread safe because of our usage
+   of static timezone information!
+\* ------------------------------------------------------------------------- */
+
+typedef struct _TIME_ZONE_RULE TIME_ZONE_RULE;
+struct _TIME_ZONE_RULE
+{
+   int32_t bias;     /* UTC = local time + bias */
+
+   int32_t mode;     /* 0 = at given week of the month  1 = time frome begin of the year (leap day 02/29 ignored)  2 = time from begin of the year (leap day not ignored) */
+   int32_t year_day; /* absolute or relative day since begin of the year */
+   int32_t month;    /* month of the year  0 = January */
+   int32_t mweek;    /* week of the month  1 .. 5  (5 == last week the wday occurs ) */
+   int32_t wday;     /* day of the week the rule applies starting with 0 = Sunday */
+   int32_t time;     /* local time of the day the the time starts in seconds */
+
+   char    zone_name[72]; /* name of that time zone */
+};
+
+typedef struct _TIME_ZONE_INFO TIME_ZONE_INFO;
+struct _TIME_ZONE_INFO
+{
+   TIME_ZONE_RULE standard; /* standard time rules */
+   TIME_ZONE_RULE daylight; /* daylight saving time rules */
+   int32_t        year;     /* for type 3 and 4 only: the year that the final rule starts */
+   int32_t        type;     /* 0 = uninitialized  1 = standard time only  2 = day light saving */
+};
+
+
+/* ------------------------------------------------------------------------- *\
+   b_read_TZ parses a Unix conform TZ evironment variable conform string for
+   the time zone rules and stores this rules in success case in pzi.
+   The function returns nonzero in success case only.
+   If the function fails because of an invalid string then pzi is unchanged.
+\* ------------------------------------------------------------------------- */
+int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);
+
+
+/* ------------------------------------------------------------------------- *\
+   mktime_of_zone is a thread safe mktime implementation for any timezone
+   where the daylight saving rules are given in a struct TIME_ZONE_INFO
+\* ------------------------------------------------------------------------- */
+time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi);
+
+
+/* ------------------------------------------------------------------------- *\
+   localtime_of_zone is just multithreading safe version of localtime
+   according to the time zone and daylight saving rules that are given
+   in a struct TIME_ZONE_INFO
+
+   Note: new_localtime_r returns the atronomical date that has a year 0.
+         If you need the historical date you can do this as following
+   ...
+   new_localtime_r(&t, ptm);
+   if(ptm->year <= -1900)
+      --ptm->year;
+   printf ( "The historical year was %s%i%s", ptm->year > -1900 ? "AD" : "",
+            ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
+   ...
+\* ------------------------------------------------------------------------- */
+struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi);
 
 #ifdef __cplusplus
 }/* extern "C" */

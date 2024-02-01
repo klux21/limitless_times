@@ -497,37 +497,6 @@ Exit:;
 }/* new_gmtime_r */
 
 
-/* ------------------------------------------------------------------------- *\
-   udate_time_zone_info initializes or reinitializes the timezone information
-   that is used for new_mktime and new_localtime_r according to the current
-   system settings. The function is not yet thread safe because of our usage
-   of static timezone information!
-\* ------------------------------------------------------------------------- */
-
-typedef struct _TIME_ZONE_RULE TIME_ZONE_RULE;
-struct _TIME_ZONE_RULE
-{
-   int32_t bias;     /* UTC = local time + bias */
-
-   int32_t mode;     /* 0 = at given week of the month  1 = time frome begin of the year (leap day 02/29 ignored)  2 = time from begin of the year (leap day not ignored) */
-   int32_t year_day; /* absolute or relative day since begin of the year */
-   int32_t month;    /* month of the year  0 = January */
-   int32_t mweek;    /* week of the month  1 .. 5  (5 == last week the wday occurs ) */
-   int32_t wday;     /* day of the week the rule applies starting with 0 = Sunday */
-   int32_t time;     /* local time of the day the the time starts in seconds */
-
-   char    zone_name[72]; /* name of that time zone e.g. "UTC" or "CET" */
-};
-
-typedef struct _TIME_ZONE_INFO TIME_ZONE_INFO;
-struct _TIME_ZONE_INFO
-{
-   TIME_ZONE_RULE standard; /* standard time rules */
-   TIME_ZONE_RULE daylight; /* daylight saving time rules */
-   int32_t        year;     /* for type 3 and 4 only: the year that the final rule starts */
-   int32_t        type;     /* 0 = uninitialized  1 = standard time only  2 = day light saving */
-};
-
 static TIME_ZONE_INFO ti;   /* static time zone information as returned by the system functions */
 
 
@@ -810,10 +779,13 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
 
 
 /* ------------------------------------------------------------------------- *\
-   b_read_TZ parses TZ evironment variable for the time zone rules
+   b_read_TZ parses a TZ evironment variable conform string for the time
+   zone rules and stores this rules in success case in pzi.
+   The function rturns nonzero in success case.
+   If the function fails because of an invalid string then pzi is unchanged.
 \* ------------------------------------------------------------------------- */
 
-static int b_read_TZ (TIME_ZONE_INFO *pzi, const char * pTZ)
+int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
 {
    int     bRet = 0;
    TIME_ZONE_INFO zi;
@@ -878,13 +850,16 @@ void update_time_zone_info()
       pTZ = getenv("TZ");
    }
 
-   if(pTZ && !strncmp(pTZ, last_TZ, sizeof(last_TZ) - 1))
-      goto Exit; /* timezone unchanged */
+   if(pTZ)
+   {
+      if(!strncmp(pTZ, last_TZ, sizeof(last_TZ) - 1))
+          goto Exit; /* timezone unchanged */
 
-   strncpy(last_TZ, pTZ, sizeof(last_TZ) - 1);
+      strncpy(last_TZ, pTZ, sizeof(last_TZ) - 1);
 
-   if (b_read_TZ(&ti, pTZ))
-      goto Exit;
+      if (b_read_TZ(&ti, pTZ))
+         goto Exit;
+   }
 
 #ifndef _WIN32
    if(!pTZ)
@@ -1021,9 +996,10 @@ static const int32_t startday_of_month_array_leap_year[12] = { 0, 31, 60, 91, 12
 
 
 /* ------------------------------------------------------------------------- *\
-   new_mktime is a mktime implementation for Windows
+   mktime_of_zone is a thread safe mktime implementation for any timezone
+   where the daylight saving rules are given in a struct TIME_ZONE_INFO
 \* ------------------------------------------------------------------------- */
-time_t new_mktime(struct tm * ptm)
+time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
    int64_t tt = -1;
    int     leap_year = 0;
@@ -1039,8 +1015,6 @@ time_t new_mktime(struct tm * ptm)
       errno = EINVAL;
       goto Exit;
    }
-
-   update_time_zone_info();
 
    if (   ((ptm->tm_sec  < 0) || (ptm->tm_sec  > 60))
        || ((ptm->tm_min  < 0) || (ptm->tm_min  > 59))
@@ -1142,9 +1116,9 @@ time_t new_mktime(struct tm * ptm)
 
    isDaylightSaving = ptm->tm_isdst;
 
-   if((isDaylightSaving < 0) && (ti.type > 1))
+   if((isDaylightSaving < 0) && (ptzi->type > 1))
    {
-      TIME_ZONE_RULE * ptz;
+      const TIME_ZONE_RULE * ptz;
       int32_t wday_year_start;
       int32_t daylight_start; /* begin of day light saving in seconds after begin of the year */
       int32_t standard_start; /* begin of standard time in seconds after begin of the year */
@@ -1161,7 +1135,7 @@ time_t new_mktime(struct tm * ptm)
 
       /* calculate the begin of the daylight saving after the start of the year in seconds */
 
-      ptz              = &ti.daylight;
+      ptz              = &ptzi->daylight;
       month            = ptz->month; /* index of the month */
       month_start_day  = startday_of_month[month];
       wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
@@ -1178,12 +1152,12 @@ time_t new_mktime(struct tm * ptm)
          switchday += 7;
 
       daylight_start = month_start_day + switchday; /* start day of daylight saving within the year */
-      daylight_start = (daylight_start * 86400) + ptz->time + ti.standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
+      daylight_start = (daylight_start * 86400) + ptz->time + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
 
       /* ------------------------------------------------------------------------- */
 
       /* calculate the return to the standard time after the start of the year in seconds */
-      ptz              = &ti.standard;
+      ptz              = &ptzi->standard;
       month            = ptz->month; /* index of the month */
       month_start_day  = startday_of_month[month];
       wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
@@ -1200,31 +1174,31 @@ time_t new_mktime(struct tm * ptm)
          switchday += 7;
 
       standard_start = month_start_day + switchday; /* start day of standard time within the year */
-      standard_start = (standard_start * 86400) + ptz->time + ti.daylight.bias;  /* time offset of returning to the standard time in the year in seconds */
+      standard_start = (standard_start * 86400) + ptz->time + ptzi->daylight.bias;  /* time offset of returning to the standard time in the year in seconds */
 
       /* ------------------------------------------------------------------------- */
 
       if (daylight_start > standard_start)
       {  /* southern hemisphere */
          if((time_of_year >= standard_start) && (time_of_year < daylight_start))
-            tt += ti.standard.bias;
+            tt += ptzi->standard.bias;
          else
-            tt += ti.daylight.bias;
+            tt += ptzi->daylight.bias;
       }
       else
       {  /* northern hemisphere */
          if((time_of_year >= daylight_start) && (time_of_year < standard_start))
-            tt += ti.daylight.bias;
+            tt += ptzi->daylight.bias;
          else
-            tt += ti.standard.bias;
+            tt += ptzi->standard.bias;
       }
    }
    else
    {
-      if(isDaylightSaving && (ti.type > 1))
-         tt += ti.daylight.bias;
+      if(isDaylightSaving && (ptzi->type > 1))
+         tt += ptzi->daylight.bias;
       else
-         tt += ti.standard.bias;
+         tt += ptzi->standard.bias;
    }
 
    tt += (int64_t) time_of_year;
@@ -1243,7 +1217,19 @@ time_t new_mktime(struct tm * ptm)
 
 
 /* ------------------------------------------------------------------------- *\
-   new_localtime_r an own implementation of localtime_r
+   new_mktime is a mktime implementation
+\* ------------------------------------------------------------------------- */
+time_t new_mktime(struct tm * ptm)
+{
+   update_time_zone_info();
+   return(mktime_of_zone(ptm, &ti));
+} /* time_t new_mktime(struct tm * ptm) */
+
+
+/* ------------------------------------------------------------------------- *\
+   localtime_of_zone is just multithreading safe version of localtime
+   according to the time zone and daylight saving rules that are given
+   in a struct TIME_ZONE_INFO
 
    Note: new_localtime_r returns the atronomical date that has a year 0.
          If you need the historical date you can do this as following
@@ -1255,24 +1241,17 @@ time_t new_mktime(struct tm * ptm)
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
 \* ------------------------------------------------------------------------- */
-struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
+struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
-   time_t  utc_time = 0;
    int64_t time;
    int     isDaylightSaving = 0;
 
-   if(!ti.type)
-      update_time_zone_info();
-
-   if(pt)
-      utc_time = *pt;
-
-   if (ti.type > 1)
+   if (ptzi->type > 1)
    {
       int32_t daylight_start; /* begin of day light saving in seconds after begin of the year */
       int32_t standard_start; /* begin of standard time in seconds after begin of the year */
 
-      TIME_ZONE_RULE * ptz;
+      const TIME_ZONE_RULE * ptz;
       int32_t month; /* index of the month */
       int32_t month_start_day;
       int32_t wday_month_start;
@@ -1392,7 +1371,7 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
       /* ------------------------------------------------------------------------- */
 
       /* calculate the begin of the daylight saving after the start of the year in seconds */
-      ptz              = &ti.daylight;
+      ptz              = &ptzi->daylight;
       month            = ptz->month; /* index of the month */
       month_start_day  = startday_of_month[month];
       wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
@@ -1409,12 +1388,12 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
          switchday += 7;
 
       daylight_start = month_start_day + switchday; /* start day of daylight saving within the year */
-      daylight_start = (daylight_start * 86400) + ptz->time + ti.standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
+      daylight_start = (daylight_start * 86400) + ptz->time + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
 
       /* ------------------------------------------------------------------------- */
 
       /* calculate the return to the standard time after the start of the year in seconds */
-      ptz              = &ti.standard;
+      ptz              = &ptzi->standard;
       month            = ptz->month; /* index of the month */
       month_start_day  = startday_of_month[month];
       wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
@@ -1431,7 +1410,7 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
          switchday += 7;
 
       standard_start = month_start_day + switchday; /* start day of standard time within the year */
-      standard_start = (standard_start * 86400) + ptz->time + ti.daylight.bias;  /* time offset of returning to the standard time in the year in seconds */
+      standard_start = (standard_start * 86400) + ptz->time + ptzi->daylight.bias;  /* time offset of returning to the standard time in the year in seconds */
 
       /* ------------------------------------------------------------------------- */
 
@@ -1439,11 +1418,11 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
       {  /* southern hemisphere */
          if((time_of_year >= standard_start) && (time_of_year < daylight_start))
          {
-            utc_time -= ti.standard.bias;
+            utc_time -= ptzi->standard.bias;
          }
          else
          {
-            utc_time -= ti.daylight.bias;
+            utc_time -= ptzi->daylight.bias;
             isDaylightSaving = 1;
          }
       }
@@ -1451,18 +1430,18 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
       {  /* northern hemisphere */
          if((time_of_year >= daylight_start) && (time_of_year < standard_start))
          {
-            utc_time -= ti.daylight.bias;
+            utc_time -= ptzi->daylight.bias;
             isDaylightSaving = 1;
          }
          else
          {
-            utc_time -= ti.standard.bias;
+            utc_time -= ptzi->standard.bias;
          }
       }
    }
    else
    {
-      utc_time -= ti.standard.bias;
+      utc_time -= ptzi->standard.bias;
    }
 
    if(ptm)
@@ -1472,8 +1451,29 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
    }
 
    return (ptm);
-}/* new_localtime_r */
+}/* struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi) */
 
+
+/* ------------------------------------------------------------------------- *\
+   new_localtime_r an own implementation of localtime_r
+
+   Note: new_localtime_r returns the atronomical date that has a year 0.
+         If you need the historical date you can do this as following
+   ...
+   new_localtime_r(&t, ptm);
+   if(ptm->year <= -1900)
+      --ptm->year;
+   printf ( "The historical year was %s%i%s", ptm->year > -1900 ? "AD" : "",
+            ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
+   ...
+\* ------------------------------------------------------------------------- */
+struct tm * new_localtime_r(const time_t * pt, struct tm * ptm)
+{
+   if(!ti.type)
+      update_time_zone_info();
+
+   return localtime_of_zone(pt ? *pt : 0, ptm, &ti);
+} /* struct tm * new_localtime_r(const time_t * pt, struct tm * ptm) */
 
 /* ========================================================================= *\
    END OF FILE

@@ -318,7 +318,7 @@ time_t new_mkgmtime(struct tm * ptm)
    time_of_year += ptm->tm_hour * 3600;
 
    tt += (int64_t) time_of_year;
-   tt -= (int64_t) 719528 * 86400; /* subtract the time from 1/1/0000 to 1/1/1970 */
+   tt -= (int64_t) 719528 * 86400; /* subtract the time from 1/1/0000 until 1/1/1970 */
 
    if(tt != (time_t) tt)
    { /* handle overflow of 32 bit time_t values */
@@ -419,7 +419,7 @@ struct tm * new_gmtime_r(time_t * pt, struct tm * ptm)
    }
 
    if (day >= 36525)
-   { /* if the time is more than 100 years after a full 400 year epoch */
+   { /* if the time is more than 100 years after the start of a 400 years epoch */
       day -= 36525;
       year += 100;
 
@@ -859,14 +859,14 @@ static int b_read_TZ (TIME_ZONE_INFO *pzi, const char * pTZ)
 
 
 /* ------------------------------------------------------------------------- *\
-   udate_time_zone_info initializes or reinitializes the timezone information
+   update_time_zone_info initializes or reinitializes the timezone information
    that is used for new_mktime and new_localtime_r according to the current
    system settings. The function is not thread safe regarding our usage of
    static timezone information and requires TZ being set as specified in the
    Unix standard.
 \* ------------------------------------------------------------------------- */
 
-void udate_time_zone_info()
+void update_time_zone_info()
 {/* Get time zone information from system */
    static char last_TZ[512];
    char * pTZ = getenv("TZ");
@@ -987,7 +987,6 @@ void udate_time_zone_info()
          ti.type = 1; /* standard time only */
       }
    }
-
 #else
 
    /* default to UTC without any daylight saving nor time offsets */
@@ -997,7 +996,7 @@ void udate_time_zone_info()
 #endif /* _WIN32 */
 
    Exit:;
-} /* void udate_time_zone_info() */
+} /* void update_time_zone_info() */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -1041,7 +1040,7 @@ time_t new_mktime(struct tm * ptm)
       goto Exit;
    }
 
-   udate_time_zone_info();
+   update_time_zone_info();
 
    if (   ((ptm->tm_sec  < 0) || (ptm->tm_sec  > 60))
        || ((ptm->tm_min  < 0) || (ptm->tm_min  > 59))
@@ -1263,7 +1262,7 @@ struct tm * new_localtime_r(time_t * pt, struct tm * ptm)
    int     isDaylightSaving = 0;
 
    if(!ti.type)
-      udate_time_zone_info();
+      update_time_zone_info();
 
    if(pt)
       utc_time = *pt;

@@ -15,7 +15,7 @@ Thread safety is is till an issue in new_mktime() and new_localtime_r()
 because that caring of an environment parameter like TZ which that can be
 adjusted at runtime requires updates of some pre-calculated values which
 contain the time-zone information.
-For being thread safe you need to call new_mktime() or udate_time_zone_info()
+For being thread safe you need to call new_mktime() or update_time_zone_info()
 before creating any threads and to prevent adjustments of the TZ environment
 variable afterwards.
 

@@ -156,14 +156,14 @@ time_t new_mkgmtime(struct tm * ptm);
 #define mkgmtime   new_mkgmtime
 
 /* ------------------------------------------------------------------------- *\
-   udate_time_zone_info initializes or reinitializes the timezone information
+   update_time_zone_info initializes or reinitializes the timezone information
    that is used for new_mktime and new_localtime_r according to the current
    system settings. The function is not yet thread safe implemented
    and requires TZ being defined as specified in the Unix standard.
    The function is called by new_mktime() and calls tzset() internally
    if the TZ variable isn't yet set already.
 \* ------------------------------------------------------------------------- */
-void udate_time_zone_info();
+void update_time_zone_info();
 
 /* ------------------------------------------------------------------------- *\
    new_mktime is a mktime implementation for Windows

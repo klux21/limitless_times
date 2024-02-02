@@ -4,12 +4,17 @@ It did bother me that several time function are not only quite slow but also
 that it's not even possible to use those for the calculate my own age just
 because the implementations of functions like mktime or gmtime of most systems
 and C compilers are unable to handle dates before 1970 despite that the time_t
-value is a signed data type. So this bunch of functions are a thing that I did
-want to implement since a long time already.
+value is a signed data type. Beside of that is there the nightmare of the
+daylight saving in the different times zones.
 
 The wrappers for gmtime_r, mkgmtime, mktime and localtime_r here can handle
 Gregorian time even back to the age of dinosaur and also the same time span
 ahead in the future.
+
+And there are the functions mktime_of_zone() and localtime_of_zone() that
+provide a thread save conversions between time_t and the times of different
+time zones then the local one and care about the daylight saving rules of
+the several time zones.
 
 Thread safety is is till an issue in new_mktime() and new_localtime_r()
 because that caring of an environment parameter like TZ which that can be
@@ -70,6 +75,7 @@ Please be aware that this code is despite of this very permissive license not
 even partially public domain software! For this it's a very good idea to care
 about the license conditions.
 
+But now it's time for some limitless times, don't you agree?
 
 Kind regards,
 

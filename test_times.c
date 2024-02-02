@@ -236,15 +236,6 @@ int test_speed()
    stm.tm_sec   = 59;
    stm.tm_isdst = -1;
 
-#if 0
-   i  = 1000000;
-   t0 = UnixTime();
-   while (i--)
-      tt = mkgmtime(&stm);
-   t1 = UnixTime() - t0;
-   fprintf(stdout, "An average ______ mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
-#endif
-
    i  = 1000000;
    t0 = UnixTime();
    while (i--)
@@ -252,13 +243,27 @@ int test_speed()
    t1 = UnixTime() - t0;
    fprintf(stdout, "An average __ new_mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
-#if 0
+#ifdef _WIN32
+   i  = 1000000;
+   t0 = UnixTime();
+   while (i--)
+      ot = mkgmtime(&stm);
+   t1 = UnixTime() - t0;
+   fprintf(stdout, "An average ______ mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+#else
+   i  = 1000000;
+   t0 = UnixTime();
+   while (i--)
+      ot = timegm(&stm);
+   t1 = UnixTime() - t0;
+   fprintf(stdout, "An average ________ timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+#endif
+
    if (ot != tt)
    {
       fprintf (stderr, "Return values of mkgmtime() and new_gmmktime() differ! (%ld != %ld)", (long) ot, (long) tt);
       goto Exit;
    }
-#endif
 
    i  = 1000000;
    t0 = UnixTime();
@@ -348,9 +353,9 @@ int test_speed()
    pz = getenv("TZ");
 
    if(!bRet)
-       fprintf(stderr, "\nSpeed tests have failed! (TZ=%s) \n", pz ? pz : "<empty>");
+       fprintf(stderr, "\nPerformance tests have failed! (TZ=%s) \n", pz ? pz : "<empty>");
    else
-       fprintf(stdout, "\nSpeed tests passed! (TZ=%s)\n", pz ? pz : "<empty>");
+       fprintf(stdout, "\nPerformance tests passed! (TZ=%s)\n", pz ? pz : "<empty>");
 
    return(bRet);
 } /* int test_speed() */

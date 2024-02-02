@@ -115,7 +115,7 @@ int week_of_year(int year, int month, int day);
 /* ------------------------------------------------------------------------- *\
    calendar_week_of_year returns the calender week of the year for a struct tm
 \* ------------------------------------------------------------------------- */
-int calendar_week_of_year(struct tm * ptm);
+int calendar_week_of_year(const struct tm * ptm);
 
 /* ------------------------------------------------------------------------- *\
    calendar_week_of_time returns the calender week of the year for a time_t
@@ -136,7 +136,7 @@ int calendar_week_of_time(time_t tt);
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
 \* ------------------------------------------------------------------------- */
-struct tm * new_gmtime_r(time_t * pt, struct tm * ptm);
+struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm);
 
 #ifdef gmtime_r
 #undef gmtime_r
@@ -147,13 +147,20 @@ struct tm * new_gmtime_r(time_t * pt, struct tm * ptm);
 /* ------------------------------------------------------------------------- *\
    new_mkgmtime is a mkgmtime implementation
 \* ------------------------------------------------------------------------- */
-time_t new_mkgmtime(struct tm * ptm);
+time_t new_mkgmtime(const struct tm * ptm);
 
 #ifdef mkgmtime
 #undef mkgmtime
 #endif
 
 #define mkgmtime   new_mkgmtime
+
+#ifdef timegm
+#undef timegm
+#endif
+
+#define timegm   new_mkgmtime
+
 
 /* ------------------------------------------------------------------------- *\
    update_time_zone_info initializes or reinitializes the timezone information
@@ -168,7 +175,7 @@ void update_time_zone_info();
 /* ------------------------------------------------------------------------- *\
    new_mktime is a mktime implementation
 \* ------------------------------------------------------------------------- */
-time_t new_mktime(struct tm * ptm);
+time_t new_mktime(const struct tm * ptm);
 
 #ifdef mktime
 #undef mktime

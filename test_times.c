@@ -206,11 +206,12 @@ int test_times()
    return(bRet);
 } /* int test_times() */
 
+
+#undef timegm
 #undef mktime
 #undef mkgmtime
 #undef gmtime_r
 #undef localtime_r
-
 
 int test_speed()
 {

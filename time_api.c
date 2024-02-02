@@ -102,13 +102,22 @@
 /* ------------------------------------------------------------------------- *\
    calendar_week_of_year returns the calender week of the year for a struct tm
 \* ------------------------------------------------------------------------- */
-int calendar_week_of_year(struct tm * ptm)
+int calendar_week_of_year(const struct tm * ptm)
 {
    int wday_01_01;
    int kw_ret = 0;
+   int epoch  = 0;
+   int year   = 0;
 
    if(!ptm)
       goto Exit;
+
+   year = ptm->tm_year + 1900;
+
+   epoch = year / 400;
+   if (year < 0)
+      --epoch;
+   year -= epoch * 400; /* year is between 0 and 399 now (every 400 years epoch epoch starts on a Saturday) */
 
    /* we have to subtract one because the calendar week starts
       on Monday instead on Sunday as in struct ptm specified. */
@@ -117,16 +126,13 @@ int calendar_week_of_year(struct tm * ptm)
    if(wday_01_01 >= 4)
       wday_01_01 -= 7; /* subtract a week because the 01/01 belongs to KW53 of last year. */
 
-   if(ptm->tm_year < -1900)
-      ptm->tm_year -= (((ptm->tm_year + 1900) / 400) - 1) * 400; /* handle the years before year 0  */
-
    kw_ret = (ptm->tm_yday + wday_01_01 + 7) / 7;
 
    if (kw_ret == 53)
    { /* KW53 is KW1 of next year if the 12/31 isn't a Thursday */
       long wday_12_31;
 
-      if(!(ptm->tm_year & 3) && ((ptm->tm_year % 100) || !((ptm->tm_year + 1900) % 400)))
+      if(!(year & 3) && ((year % 100) || !year))
           wday_12_31 = (wday_01_01 + 366) % 7; /* leap year */
       else
           wday_12_31 = (wday_01_01 + 365) % 7; /* normal year */
@@ -197,7 +203,7 @@ int calendar_week_of_time(time_t tt)
 /* ------------------------------------------------------------------------- *\
    new_mkgmtime is a mkgmtime implementation
 \* ------------------------------------------------------------------------- */
-time_t new_mkgmtime(struct tm * ptm)
+time_t new_mkgmtime(const struct tm * ptm)
 {
    int64_t tt = -1;
    int64_t year;
@@ -346,7 +352,7 @@ time_t new_mkgmtime(struct tm * ptm)
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
 \* ------------------------------------------------------------------------- */
-struct tm * new_gmtime_r(time_t * pt, struct tm * ptm)
+struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
 {
    int64_t time = 0; /* unix time in micro seconds */
    int64_t day;
@@ -477,7 +483,6 @@ struct tm * new_gmtime_r(time_t * pt, struct tm * ptm)
    {  /* 1rst year of the 4 year block */
       leap_year = 1;
    }
-   /* leap_year = !(year & 3) && ((year % 100) || !(year % 400)); */
 
    ptm->tm_year = (int) (year - 1900);
    ptm->tm_yday = (int) day;
@@ -1219,7 +1224,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 /* ------------------------------------------------------------------------- *\
    new_mktime is a mktime implementation
 \* ------------------------------------------------------------------------- */
-time_t new_mktime(struct tm * ptm)
+time_t new_mktime(const struct tm * ptm)
 {
    update_time_zone_info();
    return(mktime_of_zone(ptm, &ti));
@@ -1348,8 +1353,6 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       {  /* 1rst year of the 4 year block */
          leap_year = 1;
       }
-
-      /* leap_year = !(year & 3) && ((year % 100) || !(year % 400)); */
 
       time_of_year = ((int32_t) day * 86400) /* time between the begin of the day and the begin of the year */
                      + time_of_day;          /* time since begin of the day */

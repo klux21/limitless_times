@@ -348,12 +348,231 @@ int test_speed()
    pz = getenv("TZ");
 
    if(!bRet)
-       fprintf(stderr, "\nSpeed tests have failed! (TZ=%s) \n\n", pz ? pz : "<empty>");
+       fprintf(stderr, "\nSpeed tests have failed! (TZ=%s) \n", pz ? pz : "<empty>");
    else
-       fprintf(stdout, "\nSpeed tests passed! (TZ=%s)\n\n", pz ? pz : "<empty>");
+       fprintf(stdout, "\nSpeed tests passed! (TZ=%s)\n", pz ? pz : "<empty>");
 
    return(bRet);
 } /* int test_speed() */
+
+
+
+
+int test_conversions()
+{
+   int bRet = 0;
+   struct tm stm;
+   struct tm otm;
+   time_t ot = UnixTime();
+   time_t tt = UnixTime();
+   time_t t;
+   int64_t i;
+   char * pz = getenv("TZ");
+
+   stm.tm_year  = 2024 - 1900;
+   stm.tm_mon   =  2;  /* March */
+   stm.tm_mday  = 30;
+   stm.tm_hour  =  0;
+   stm.tm_min   =  0;
+   stm.tm_sec   =  0;
+   stm.tm_isdst = -1;
+   t = mktime(&stm);
+
+   i = 200000;
+   while(i--)
+   {
+      new_localtime_r(&t, &stm);
+      localtime_r(&t, &otm);
+
+      if(   (otm.tm_year  != stm.tm_year)
+         || (otm.tm_mon   != stm.tm_mon)
+         || (otm.tm_mday  != stm.tm_mday)
+         || (otm.tm_hour  != stm.tm_hour)
+         || (otm.tm_min   != stm.tm_min)
+         || (otm.tm_sec   != stm.tm_sec)
+         || (otm.tm_wday  != stm.tm_wday)
+         || (otm.tm_isdst != stm.tm_isdst)
+         || (otm.tm_yday  != stm.tm_yday))
+      {
+         fprintf (stderr, "Return values of localtime_r() and new_localtime_r() differ for time_t %ld (0x%lx)!\n"
+                  "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                  (long) tt, (long) tt,
+                  otm.tm_year + 1900, otm.tm_mon+1, otm.tm_mday, otm.tm_hour, otm.tm_min, otm.tm_sec, otm.tm_yday, otm.tm_isdst, otm.tm_wday,
+                  stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday );
+         goto Exit;
+      }
+
+      tt = new_mktime(&stm);
+      ot = mktime(&stm);
+
+      if((tt != ot) || (tt != t))
+      {
+          fprintf (stderr, "Return values of new_mktime() and mktime() are differently for the time %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d)\n"
+                   "( %ld (0x%lx) <>  %ld (0x%lx))\n",
+                   stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday,
+                   (long) tt, (long) tt, (long) ot, (long) ot );
+          goto Exit;
+      }
+
+      ++t;
+   }
+
+   stm.tm_year  = 2024 - 1900;
+   stm.tm_mon   =  9; /* October */
+   stm.tm_mday  = 26;
+   stm.tm_hour  =  0;
+   stm.tm_min   =  0;
+   stm.tm_sec   =  0;
+   stm.tm_isdst = -1;
+   t = mktime(&stm);
+
+   i = 200000;
+   while(i--)
+   {
+      new_localtime_r(&t, &stm);
+      localtime_r(&t, &otm);
+
+      if(   (otm.tm_year  != stm.tm_year)
+         || (otm.tm_mon   != stm.tm_mon)
+         || (otm.tm_mday  != stm.tm_mday)
+         || (otm.tm_hour  != stm.tm_hour)
+         || (otm.tm_min   != stm.tm_min)
+         || (otm.tm_sec   != stm.tm_sec)
+         || (otm.tm_wday  != stm.tm_wday)
+         || (otm.tm_isdst != stm.tm_isdst)
+         || (otm.tm_yday  != stm.tm_yday))
+      {
+         fprintf (stderr, "Return values of localtime_r() and new_localtime_r() differ for time_t %ld (0x%lx)!\n"
+                  "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                  (long) tt, (long) tt,
+                  otm.tm_year + 1900, otm.tm_mon+1, otm.tm_mday, otm.tm_hour, otm.tm_min, otm.tm_sec, otm.tm_yday, otm.tm_isdst, otm.tm_wday,
+                  stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday );
+         goto Exit;
+      }
+
+      tt = new_mktime(&stm);
+      ot = mktime(&stm);
+
+      if((tt != ot) || (tt != t))
+      {
+          fprintf (stderr, "Return values of new_mktime() and mktime() are differently for the time %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d)\n"
+                   "( %ld (0x%lx) <>  %ld (0x%lx))\n",
+                   stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday,
+                   (long) tt, (long) tt, (long) ot, (long) ot );
+          goto Exit;
+      }
+
+      ++t;
+   }
+
+   stm.tm_year  = 2024 - 1900;
+   stm.tm_mon   =  1; /* February */
+   stm.tm_mday  = 28;
+   stm.tm_hour  =  0;
+   stm.tm_min   =  0;
+   stm.tm_sec   =  0;
+   stm.tm_isdst = -1;
+   t = mktime(&stm);
+
+   i = 200000;
+   while(i--)
+   {
+      new_localtime_r(&t, &stm);
+      localtime_r(&t, &otm);
+
+      if(   (otm.tm_year  != stm.tm_year)
+         || (otm.tm_mon   != stm.tm_mon)
+         || (otm.tm_mday  != stm.tm_mday)
+         || (otm.tm_hour  != stm.tm_hour)
+         || (otm.tm_min   != stm.tm_min)
+         || (otm.tm_sec   != stm.tm_sec)
+         || (otm.tm_wday  != stm.tm_wday)
+         || (otm.tm_isdst != stm.tm_isdst)
+         || (otm.tm_yday  != stm.tm_yday))
+      {
+         fprintf (stderr, "Return values of localtime_r() and new_localtime_r() differ for time_t %ld (0x%lx)!\n"
+                  "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                  (long) tt, (long) tt,
+                  otm.tm_year + 1900, otm.tm_mon+1, otm.tm_mday, otm.tm_hour, otm.tm_min, otm.tm_sec, otm.tm_yday, otm.tm_isdst, otm.tm_wday,
+                  stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday );
+         goto Exit;
+      }
+
+      tt = new_mktime(&stm);
+      ot = mktime(&stm);
+
+      if((tt != ot) || (tt != t))
+      {
+          fprintf (stderr, "Return values of new_mktime() and mktime() are differently for the time %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d)\n"
+                   "( %ld (0x%lx) <>  %ld (0x%lx))\n",
+                   stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday,
+                   (long) tt, (long) tt, (long) ot, (long) ot );
+          goto Exit;
+      }
+
+      ++t;
+   }
+
+   stm.tm_year  = 2024 - 1900;
+   stm.tm_mon   = 11; /* December */
+   stm.tm_mday  = 31;
+   stm.tm_hour  =  0;
+   stm.tm_min   =  0;
+   stm.tm_sec   =  0;
+   stm.tm_isdst = -1;
+   t = mktime(&stm);
+
+   i = 200000;
+   while(i--)
+   {
+      new_localtime_r(&t, &stm);
+      localtime_r(&t, &otm);
+
+      if(   (otm.tm_year  != stm.tm_year)
+         || (otm.tm_mon   != stm.tm_mon)
+         || (otm.tm_mday  != stm.tm_mday)
+         || (otm.tm_hour  != stm.tm_hour)
+         || (otm.tm_min   != stm.tm_min)
+         || (otm.tm_sec   != stm.tm_sec)
+         || (otm.tm_wday  != stm.tm_wday)
+         || (otm.tm_isdst != stm.tm_isdst)
+         || (otm.tm_yday  != stm.tm_yday))
+      {
+         fprintf (stderr, "Return values of localtime_r() and new_localtime_r() differ for time_t %ld (0x%lx)!\n"
+                  "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                  (long) tt, (long) tt,
+                  otm.tm_year + 1900, otm.tm_mon+1, otm.tm_mday, otm.tm_hour, otm.tm_min, otm.tm_sec, otm.tm_yday, otm.tm_isdst, otm.tm_wday,
+                  stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday );
+         goto Exit;
+      }
+
+      tt = new_mktime(&stm);
+      ot = mktime(&stm);
+
+      if((tt != ot) || (tt != t))
+      {
+          fprintf (stderr, "Return values of new_mktime() and mktime() are differently for the time %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d)\n"
+                   "( %ld (0x%lx) <>  %ld (0x%lx))\n",
+                   stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday,
+                   (long) tt, (long) tt, (long) ot, (long) ot );
+          goto Exit;
+      }
+
+      ++t;
+   }
+
+   bRet = 1;
+   Exit:;
+
+   pz = getenv("TZ");
+
+   if(!bRet)
+       fprintf(stderr, "Time conversion comparison tests have failed! (TZ=%s)\n\n", pz ? pz : "<empty>");
+   else
+       fprintf(stdout, "Time conversion comparison tests passed! (TZ=%s)\n\n", pz ? pz : "<empty>");
+
+   return(bRet);
+} /* int test_conversions() */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -375,6 +594,9 @@ int main(int argc, char * argv[])
     if(!test_speed())
         goto Exit;
 
+    if(!test_conversions())
+        goto Exit;
+
 #ifdef _WIN32
     putenv("TZ=UTC");
 #else
@@ -382,6 +604,9 @@ int main(int argc, char * argv[])
 #endif
 
     if(!test_speed())
+        goto Exit;
+
+    if(!test_conversions())
         goto Exit;
 
     iRet = 0;

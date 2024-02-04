@@ -608,6 +608,7 @@ int main(int argc, char * argv[])
 #else
     setenv("TZ", "UTC", 1);
 #endif
+    update_time_zone_info();
 
     if(!test_speed())
         goto Exit;

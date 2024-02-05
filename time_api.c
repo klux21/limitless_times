@@ -82,6 +82,7 @@
 
 #ifdef _WIN32
 #pragma warning(disable : 4100 4127)
+#include <io.h>
 #else
 #include <unistd.h>
 #include <sys/types.h>

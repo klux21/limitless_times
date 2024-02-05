@@ -77,6 +77,7 @@
 
 #include <stddef.h>
 #include <time.h>      /* struct tm and localtime_r */
+#include <sys/types.h>
 
 #ifdef _WIN32
 #include <winsock2.h>  /* required for timeval struct */
@@ -91,11 +92,6 @@ typedef int64_t time_t;  /* time value */
 #endif
 
 #pragma warning(disable : 4204)
-
-#else
-
-#include <sys/types.h>
-
 #endif /* _WIN32 */
 
 #ifdef __CYGWIN__

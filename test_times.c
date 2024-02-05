@@ -79,23 +79,61 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . test_times.c time_api.c  
 
 #include <stdlib.h> /* setenv */
 #include <stdio.h>
-#include <time_api.h>
-#include <sys/time.h>
 #include <string.h> /* memset */
+#include <inttypes.h>
+
+#ifndef _WIN32
+#include <sys/time.h>
+#endif
+
+#include <time_api.h>
+
+#ifdef _WIN32
+
+/* ------------------------------------------------------------------------- *\
+   UnixTime delivers the Unix time in microsecond (time since 01/01/1970)
+\* ------------------------------------------------------------------------- */
+int64_t UnixTime()
+{
+   int64_t iRet;
+   FILETIME CurrentTime;
+   GetSystemTimeAsFileTime(&CurrentTime);
+
+   iRet  = ((int64_t) CurrentTime.dwHighDateTime << 32);
+   iRet += (int64_t)  CurrentTime.dwLowDateTime;
+   iRet -= (int64_t)  116444736 * 1000000 * 1000; /* offset of Windows FileTime to start of Unix time */
+
+   return (iRet / 10);
+}/* int64_t UnixTime() */
+
+#else
 
 int64_t UnixTime()
-{/* WARNING: This implementation is not year 2038 safe on most common 32 bit platforms! */
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return ((((int64_t) tv.tv_sec) *1000000ul)+tv.tv_usec );
+{
+   int64_t tRet;
+   struct timeval tv;
+
+   gettimeofday(&tv, NULL);
+
+   tRet = (int64_t) tv.tv_sec;
+
+   /* Try to turn the year 2038 problem into a year 2106 problem. */
+   if((sizeof(time_t) <= 4) && (tv.tv_sec < 0))
+      tRet += (int64_t) 0x80000000ul + (int64_t) 0x80000000ul;
+
+   tRet *= 1000000ul;
+   tRet += tv.tv_usec;
+   return (tRet);
 }/* int64_t UnixTime() */
+#endif
 
 
 /* ------------------------------------------------------------------------- *\
-   Tests of new_mktime, mew_mkgmtime, localtime_r and gmtime_r
+   test_time_range tests the range of new_mktime, mew_mkgmtime,
+   new_localtime_r and new_gmtime_r
 \* ------------------------------------------------------------------------- */
 
-int test_times()
+int test_time_range()
 {
     int bRet = 0;
     int year = -20000;
@@ -204,14 +242,41 @@ int test_times()
    else
        fprintf(stdout, "Time conversion tests of the years 20001 BC til 20000 AD  passed!\n\n");
    return(bRet);
-} /* int test_times() */
+} /* int test_time_range() */
 
+/* ------------------------------------------------------------------------- *\
+   test_speed measures the speed of new_mktime, mew_mkgmtime, new_localtime_r
+   and new_gmtime_r and the system implementations.
+\* ------------------------------------------------------------------------- */
 
 #undef timegm
 #undef mktime
 #undef mkgmtime
 #undef gmtime_r
 #undef localtime_r
+
+
+#ifdef _WIN32
+#define mkgmtime _mkgmtime
+
+/* gmtime and localtime are threadsafe implemented in Windows */
+struct tm * gmtime_r(const time_t * pt, struct tm * ptm)
+{
+   struct tm * pgt = gmtime(pt);
+   if (pgt)
+       *ptm = *pgt;
+   return (ptm);
+} /* struct tm * gmtime_r(const time_t * pt, struct tm * ptm */
+
+struct tm * localtime_r(const time_t * pt, struct tm * ptm)
+{
+   struct tm * pgt = localtime(pt);
+   if (pgt)
+       *ptm = *pgt;
+   return (ptm);
+} /* struct tm * localtime_r(const time_t * pt, struct tm * ptm */
+#endif
+
 
 int test_speed()
 {
@@ -362,7 +427,11 @@ int test_speed()
 } /* int test_speed() */
 
 
-
+/* ------------------------------------------------------------------------- *\
+   test_conversions compares the return values of new_mktime, mew_mkgmtime,
+   new_localtime_r and new_gmtime_r around critical dates like begin and end
+   of the daylight saving to the one of the system functions.
+\* ------------------------------------------------------------------------- */
 
 int test_conversions()
 {
@@ -589,32 +658,74 @@ int main(int argc, char * argv[])
     int iRet = 1;
 
 #ifdef _WIN32
-    putenv("TZ=CET-1CEST,M3.5.0,M10.5.0/3");
+   /* tzset() in VC++ is unable to handle the daylight saving rules of the TZ variables right :o(
+      For this we use b_read_TZ for parsing the data and SetTimeZoneInformation for setting this. */
+
+#if 0
+   putenv("TZ=CET-1CEST,M3.5.0,M10.5.0/3");
+   tzset();
+#endif
+
+   TIME_ZONE_INFO ti;
+   TIME_ZONE_INFORMATION tzi;
+
+   if(!b_read_TZ (&ti, "CET-1CEST,M3.5.0,M10.5.0/3"))
+   {
+      printf("b_read_TZ (\"CET-1CEST,M3.5.0,M10.5.0/3\") has failed!\n");
+      goto Exit;
+   }
+
+   memset(&tzi, 0, sizeof(tzi));
+   tzi.Bias = 0;
+   tzi.StandardName[0]         = 'S';
+   tzi.StandardDate.wMonth     = ti.standard.month + 1;
+   tzi.StandardDate.wDayOfWeek = ti.standard.wday;
+   tzi.StandardDate.wDay       = ti.standard.mweek;
+   tzi.StandardDate.wHour      = ti.standard.time / 3600;
+   tzi.StandardDate.wMinute    = (ti.standard.time - tzi.StandardDate.wHour * 3600) / 60;
+   tzi.StandardDate.wSecond    = ti.standard.time % 60;
+   tzi.StandardBias            = ti.standard.bias / 60;
+
+   tzi.DaylightName[0]         = 'D';
+   tzi.DaylightDate.wMonth     = ti.daylight.month + 1;
+   tzi.DaylightDate.wDayOfWeek = ti.daylight.wday;
+   tzi.DaylightDate.wDay       = ti.daylight.mweek;
+   tzi.DaylightDate.wHour      = ti.daylight.time / 3600;
+   tzi.DaylightDate.wMinute    = (ti.daylight.time - tzi.DaylightDate.wHour * 3600) / 60;
+   tzi.DaylightDate.wSecond    = ti.daylight.time % 60;
+   tzi.DaylightBias            = ti.daylight.bias / 60;
+
+   if(!SetTimeZoneInformation( &tzi))
+   {
+      printf("SetTimeZoneInformation failed (error=%d)\n", GetLastError());
+      goto Exit;
+   }
 #else
     setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
 #endif
 
-    if(!test_times())
-        goto Exit;
+    if(!test_time_range())
+       goto Exit;
 
     if(!test_speed())
-        goto Exit;
+       goto Exit;
 
     if(!test_conversions())
-        goto Exit;
+       goto Exit;
 
-#ifdef _WIN32
-    putenv("TZ=UTC");
+#ifndef _WIN32
+    setenv("TZ", "UTC0", 1);
 #else
-    setenv("TZ", "UTC", 1);
+    putenv("TZ=UTC0");
 #endif
+    tzset();
     update_time_zone_info();
 
     if(!test_speed())
-        goto Exit;
+       goto Exit;
 
     if(!test_conversions())
-        goto Exit;
+       goto Exit;
 
     iRet = 0;
     Exit:;

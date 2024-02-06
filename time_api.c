@@ -294,9 +294,9 @@ time_t new_mkgmtime(const struct tm * ptm)
    }
 
    if(!leap_year)
-   {                                        /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
-      static const int32_t days_of_month[12]     = {31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-      static const int32_t startday_of_month[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
+   {                                         /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
+      static const uint8_t  days_of_month[12]     = {31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
+      static const uint16_t startday_of_month[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
 
       if (ptm->tm_mday > days_of_month[ptm->tm_mon])
       {
@@ -308,8 +308,8 @@ time_t new_mkgmtime(const struct tm * ptm)
    }
    else
    {
-      static const int32_t days_of_month[12]     = {31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-      static const int32_t startday_of_month[12] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
+      static const int8_t  days_of_month[12]     = {31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
+      static const int16_t startday_of_month[12] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
 
       if (ptm->tm_mday > days_of_month[ptm->tm_mon])
       {
@@ -363,7 +363,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    int      leap_year = 0;
    int      ignore_leap_year = 0;
 
-   static char mday[366] = /* day of a month of in a leap year */
+   static uint8_t mday[366] = /* day of a month of in a leap year */
    {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
     1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
     1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
@@ -377,7 +377,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
     1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
     1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
 
-   static char mon[366] = /* month of a day in a leap year */
+   static uint8_t mon[366] = /* month of a day in a leap year */
    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -994,10 +994,10 @@ static const uint8_t mod_7[] = {0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1
                                 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
                                 0,1,2,3,4,5 };
                                                       /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
-static const int32_t days_of_month_array[12]               = {31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-static const int32_t startday_of_month_array[12]           = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
-static const int32_t days_of_month_array_leap_year[12]     = {31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-static const int32_t startday_of_month_array_leap_year[12] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
+static const uint8_t  days_of_month_array[12]               = {31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
+static const uint16_t startday_of_month_array[12]           = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
+static const uint8_t  days_of_month_array_leap_year[12]     = {31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
+static const uint16_t startday_of_month_array_leap_year[12] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -1012,8 +1012,8 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    int64_t year;
    int64_t epoch;
    int32_t time_of_year;
-   const int32_t * days_of_month;
-   const int32_t * startday_of_month;
+   const uint8_t  * days_of_month;
+   const uint16_t * startday_of_month;
 
    if(!ptm)
    {
@@ -1268,7 +1268,6 @@ time_t new_mktime(const struct tm * ptm)
 \* ------------------------------------------------------------------------- */
 struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
-   int64_t time;
    int     isDaylightSaving = 0;
 
    if (ptzi->type > 1)
@@ -1283,35 +1282,35 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       int32_t week_of_month;
       int32_t switchday;
       int32_t time_of_day;
-      const int32_t * days_of_month;
-      const int32_t * startday_of_month;
+      const uint8_t  * days_of_month;
+      const uint16_t * startday_of_month;
 
-      int32_t time_of_year;
-      int32_t wday_year_start;
+      uint32_t tmp;
+      uint32_t day;
+      int32_t  time_of_year;
+      int32_t  wday_year_start;
 
       int     leap_year = 0;
       int     ignore_leap_year = 0;
 
-      int64_t tmp;
-      int64_t day;
-      int64_t year;
+      int64_t  time = utc_time + ((int64_t) 719528 * 86400); /* add the time from 1/1/0000 to 1/1/1970 */
+      int64_t  year;
 
-      time = utc_time + ((int64_t) 719528 * 86400); /* add the time from 1/1/0000 to 1/1/1970 */
       if (time < 0)
       {
-         year = (time / 86400 ) / 146097 - 1;       /* day of the start of the 400 year epoche before that time */
-         time -= year * ((int64_t) 146097 * 86400); /* because year is negative this leads to a posive time */
+         year  = time / ((int64_t) 146097 * 86400) - 1; /* day of the start of the 400 year epoche before that time */
+         time -= year * ((int64_t) 146097 * 86400);     /* because year is negative this leads to a posive time */
          year *= 400;
-         day  = time / 86400; /* number of days within the 400 year epoch */
-         time_of_day = (int32_t) (time - (day * 86400));
+         day  = (uint32_t) (time / 86400); /* number of days within the 400 year epoch */
+         time_of_day = (int32_t) (time - ((int64_t) day * 86400));
       }
       else
       {
-         day  = time / 86400;  /* number of full days from 1/1/0000 till time */
-         time_of_day = (int32_t) (time - (day * 86400));
-         year = day  / 146097; /* number of full 400 years epochs after 1/1/0000 */
-         day -= year * 146097; /* subtract the time of those epochs from the days */
+         year  = time / ((int64_t) 146097 * 86400); /* day of the start of the 400 year epoche before that time */
+         time -= year * ((int64_t) 146097 * 86400); /* time is between 0 an 400 AD now */
          year *= 400;
+         day  = (uint32_t) (time / 86400); /* number of days within the 400 year epoch */
+         time_of_day = (int32_t) (time - ((int64_t) day * 86400));
       }
 
       if (day >= 36526)

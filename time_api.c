@@ -406,23 +406,15 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    time += ((int64_t) 719528 * 86400); /* add the time from 1/1/0000 to 1/1/1970 */
 
    if (time < 0)
-   {
-      year  = time / ((int64_t) 146097 * 86400) - 1; /* calculate the number of full 400 year epochs */
-      time -= year * ((int64_t) 146097 * 86400);     /* subtract the 400 year epochs from time */
-      year *= 400;  /* year contains the Gregorian 400 year epoch now e.g -800 for 753 AD */
-      day  = (uint32_t) (time / 86400); /* calculate the days within the epoch */
-      time_of_day = (uint32_t) (time - (int64_t) day * 86400); /* time of the day in seconds */
-      ptm->tm_wday = (day + 6 /* 6 is offset at 1.1.0000 */) % 7; /* day of the weak the year starts with 0=Sunday ... 6=Saturday */
-   }
+      year = time / ((int64_t) 146097 * 86400) - 1; /* calculate the number of full 400 year epochs BC  */
    else
-   {
-      year  = time / ((int64_t) 146097 * 86400); /* calculate the number of full 400 year epochs */
-      time -= year * ((int64_t) 146097 * 86400); /* subtract the 400 year epochs from time */
-      year *= 400;  /* year contains the Gregorian 400 year epoch of the time now e.g 400 for 753 AD */
-      day   = (uint32_t) (time / 86400); /* calculate the days within the epoch */
-      time_of_day = (uint32_t) (time - (int64_t) day * 86400); /* time of the day in seconds */
-      ptm->tm_wday = (day + 6 /* 6 is offset at 1.1.0000 */) % 7; /* day of the weak the year starts with 0=Sunday ... 6=Saturday */
-   }
+      year = time / ((int64_t) 146097 * 86400); /* calculate the number of full 400 year epochs */
+
+   time -= year * ((int64_t) 146097 * 86400); /* subtract the 400 year epochs from time */
+   year *= 400;  /* year contains the Gregorian 400 year epoch of the time now e.g 400 for 753 AD */
+   day   = (uint32_t) (time / 86400); /* calculate the days within the epoch */
+   time_of_day = (uint32_t) (time - (int64_t) day * 86400); /* time of the day in seconds */
+   ptm->tm_wday = (day + 6 /* 6 is offset at 1.1.0000 */) % 7; /* day of the weak the year starts with 0=Sunday ... 6=Saturday */
 
    if (day >= 36525)
    { /* if the time is more than 100 years after the start of a 400 years epoch */
@@ -1297,21 +1289,14 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       int64_t  year;
 
       if (time < 0)
-      {
-         year  = time / ((int64_t) 146097 * 86400) - 1; /* day of the start of the 400 year epoche before that time */
-         time -= year * ((int64_t) 146097 * 86400);     /* because year is negative this leads to a posive time */
-         year *= 400;
-         day  = (uint32_t) (time / 86400); /* number of days within the 400 year epoch */
-         time_of_day = (int32_t) (time - ((int64_t) day * 86400));
-      }
+         year  = time / ((int64_t) 146097 * 86400) - 1; /* calculate the 400 year epoche before that time */
       else
-      {
-         year  = time / ((int64_t) 146097 * 86400); /* day of the start of the 400 year epoche before that time */
-         time -= year * ((int64_t) 146097 * 86400); /* time is between 0 an 400 AD now */
-         year *= 400;
-         day  = (uint32_t) (time / 86400); /* number of days within the 400 year epoch */
-         time_of_day = (int32_t) (time - ((int64_t) day * 86400));
-      }
+         year  = time / ((int64_t) 146097 * 86400); /* calculate the 400 year epoche before that time */
+
+      time -= year * ((int64_t) 146097 * 86400); /* time is between 0 an 400 AD now */
+      year *= 400; /* number of years */
+      day  = (uint32_t) (time / 86400); /* number of days within the 400 year epoch */
+      time_of_day = (int32_t) (time - ((int64_t) day * 86400));
 
       if (day >= 36526)
       {  /* the time is more than 100 years after a full 400 year epoch */

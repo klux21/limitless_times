@@ -358,8 +358,8 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    int64_t  time = 0; /* unix time in micro seconds */
    int64_t  year;
    uint32_t day;
-   uint32_t tmp;
    uint32_t time_of_day;
+   uint32_t tmp;
    int      leap_year = 0;
    int      ignore_leap_year = 0;
 

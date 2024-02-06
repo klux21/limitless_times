@@ -407,22 +407,22 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
 
    if (time < 0)
    {
-      day = time / 86400; /* number of full days from 1/1/0000 till time */
-      ptm->tm_wday = 6 + (int) (day % 7); /* day of the weak the year starts with 0=Sunday ... 6=Saturday. (6 is offset at 1.1.0000) */
-      year = day / 146097 - 1;  /* day of the start of the 400 year epoche before the given time */
-      time -= year * ((int64_t) 146097 * 86400); /* because year is negative this leads to a posive time */
-      year *= 400;
-      day  = time / 86400; /* number of days within the 400 year epoch */
-      time_of_day = (int32_t) (time - (day * 86400));
+      day  = time / 86400; /* get number of full days from the time til 01/01/0000 */
+      year = day / 146097 - 1; /* year contains the 400 year epoch BC that our time is within now */
+      time -= year * ((int64_t) 146097 * 86400); /* time in seconds since start of the 400 years epoch */
+      day  = time / 86400; /* number of days since the begin of the 400 year epoch */
+      time_of_day = (int32_t) (time - (day * 86400)); /* time of the day in seconds */
+      ptm->tm_wday = (int) (day + 6) % 7; /* day of the weak the year starts with 0=Sunday ... 6=Saturday. (6 is offset at 1.1.0000) */
+      year *= 400; /* year of the Gregorian 400 year epoch before our time now e.g -800 for 753 BC */
    }
    else
    {
       day  = time / 86400;  /* number of full days from 1/1/0000 till time */
-      time_of_day = (int32_t) (time - (day * 86400));
+      time_of_day = (int32_t) (time - (day * 86400)); /* time of the day in seconds */
       ptm->tm_wday = (int) (day + 6 /* 6 is offset at 1.1.0000 */) % 7; /* day of the weak the year starts with 0=Sunday ... 6=Saturday */
       year = day  / 146097; /* number of full 400 years epochs after 1/1/0000 */
       day -= year * 146097; /* subtract the time of those epochs from the days */
-      year *= 400;
+      year *= 400; /* year of the Gregorian 400 year epoch before our time e.g 400 for 753 AD */
    }
 
    if (day >= 36525)

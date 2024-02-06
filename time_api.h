@@ -141,7 +141,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm);
 #define gmtime_r   new_gmtime_r
 
 /* ------------------------------------------------------------------------- *\
-   new_mkgmtime is a mkgmtime implementation
+   new_mkgmtime is a mkgmtime (timegm) implementation
 \* ------------------------------------------------------------------------- */
 time_t new_mkgmtime(const struct tm * ptm);
 

@@ -202,7 +202,7 @@ int calendar_week_of_time(time_t tt)
 \* ========================================================================= */
 
 /* ------------------------------------------------------------------------- *\
-   new_mkgmtime is a mkgmtime implementation
+   new_mkgmtime is a mkgmtime (timegm) implementation
 \* ------------------------------------------------------------------------- */
 time_t new_mkgmtime(const struct tm * ptm)
 {

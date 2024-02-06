@@ -1,11 +1,16 @@
 limitless_times - time handling functions which overcome some annoying limits
 
 It did bother me that several time function are not only quite slow but also
-that it's not even possible to use those for the calculate my own age just
-because the implementations of functions like mktime or gmtime of most systems
-and C compilers are unable to handle dates before 1970 despite that the time_t
-value is a signed data type. Beside of that is there the nightmare of the
-daylight saving in the different times zones.
+that it's not even possible to use those for the calculate my own age. It's
+just because of the implementations of functions like mktime or gmtime of
+most systems and C compilers are unable to handle dates before 1970 despite
+that the time_t value is a signed data type. Beside of that is there the
+nightmare of the daylight saving in the different times zones and correct
+time diffing between the times of different zones. It's kind of easy to do of
+course once you aware of the daylight saving rules as provided by the tz
+library. As it comes to myself I need some really fast and reliable functions
+for my application and network logging at the manufacturers all over the
+world. 
 
 The wrappers for gmtime_r, mkgmtime, mktime and localtime_r here can handle
 Gregorian time even back to the age of dinosaur and also the same time span
@@ -55,7 +60,8 @@ no patience to wait a little bit.
 
 For testing the functions and comparing the speed with the compiler build-in
 functions you may execute the test_times.c as shell script in a Linux or BSD
-system where you have access the compiler.
+system of your choise where you have access the compiler.
+I did share my little test solution for Visual Studio as well.
 
 Why that 'Civil Usage Public License'?
 The license is kind a mix of the conditions of BSD or Apache license but in
@@ -63,19 +69,16 @@ opposite to the former it prohibits any usage for weapons, spyware and secret
 monitoring of people without their knowledge and prior agreement.
 I dislike the idea to find anything of my software in military devices, weapons
 or spyware because it's traceably in the binaries of the most recently
-available compilers.
-That's not a big deal for most people except for the ones who make money out
-of wars and things that are usually pretty nasty. I don't expect anything
-good in return of supporting those people for free. The license shouldn't be a
-big problem for most people but because it is much more permissive if it
-comes to commercial usage than something like the GPL. But despite of that it's
-for sure a good idea to use the software legally only regarding the conditions
-of the license.
-Please be aware that this code is despite of this very permissive license not
-even partially public domain software! For this it's a very good idea to care
-about the license conditions.
+available compilers. The license ist not a big deal for most people except for
+the ones who make money out of wars and things that are usually a pretty nasty
+stuff. I don't expect anything good in return of supporting those for free.
+The license is much more permissive if it comes to commercial usage than
+something like the GPL. But despite of that it's for sure a good idea to use
+the software legally only and to care about the conditions of the license.
+Please be aware that this code is despite of its very permissive license not
+even partially public domain software!
+But now it's about time for some limitless times, don't you agree?
 
-But now it's time for some limitless times, don't you agree?
 
 Kind regards,
 

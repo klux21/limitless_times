@@ -845,7 +845,7 @@ int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
 
 void update_time_zone_info()
 {/* Get time zone information from system */
-   static char last_TZ[512];
+   static char last_TZ[128]="###";
    char * pTZ = getenv("TZ");
    struct stat st;
 
@@ -867,7 +867,7 @@ void update_time_zone_info()
    }
 
 #ifndef _WIN32
-   if(!pTZ)
+   if(!pTZ || !*pTZ)
    {
       pTZ = "/etc/localtime";
       if(stat(pTZ, &st) || !(st.st_mode & S_IFREG))

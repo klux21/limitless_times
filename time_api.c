@@ -1229,7 +1229,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
    Exit:;
    return ((time_t) tt);
-} /* time_t new_mktime(struct tm * ptm) */
+} /* time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi) */
 
 
 /* ------------------------------------------------------------------------- *\

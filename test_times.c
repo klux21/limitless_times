@@ -636,6 +636,56 @@ int test_conversions()
       ++t;
    }
 
+   stm.tm_year  = 2024 - 1900;
+   stm.tm_mon   =  2;  /* March */
+   stm.tm_mday  = 30;
+   stm.tm_hour  =  0;
+   stm.tm_min   =  0;
+   stm.tm_sec   =  0;
+   stm.tm_isdst = -1;
+   t = mktime(&stm);
+
+   i = 200000;
+   while(i--)
+   {
+      new_localtime_r(&t, &stm);
+      localtime_r(&t, &otm);
+
+      if(   (otm.tm_year  != stm.tm_year)
+         || (otm.tm_mon   != stm.tm_mon)
+         || (otm.tm_mday  != stm.tm_mday)
+         || (otm.tm_hour  != stm.tm_hour)
+         || (otm.tm_min   != stm.tm_min)
+         || (otm.tm_sec   != stm.tm_sec)
+         || (otm.tm_wday  != stm.tm_wday)
+         || (otm.tm_isdst != stm.tm_isdst)
+         || (otm.tm_yday  != stm.tm_yday))
+      {
+         fprintf (stderr, "Return values of localtime_r() and new_localtime_r() differ for time_t %ld (0x%lx)!\n"
+                  "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                  (long) tt, (long) tt,
+                  otm.tm_year + 1900, otm.tm_mon+1, otm.tm_mday, otm.tm_hour, otm.tm_min, otm.tm_sec, otm.tm_yday, otm.tm_isdst, otm.tm_wday,
+                  stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday );
+         goto Exit;
+      }
+
+      stm.tm_isdst = -1;
+      tt = new_mktime(&stm);
+      stm.tm_isdst = -1;
+      ot = mktime(&stm);
+
+      if(tt != ot)
+      {
+          fprintf (stderr, "Return values of new_mktime() and mktime() are differently for the time %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d)\n"
+                   "( %ld (0x%lx) <>  %ld (0x%lx))\n",
+                   stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday,
+                   (long) tt, (long) tt, (long) ot, (long) ot );
+          goto Exit;
+      }
+
+      ++t;
+   }
+
    bRet = 1;
    Exit:;
 

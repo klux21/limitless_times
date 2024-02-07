@@ -1158,7 +1158,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
          daylight_start = month_start_day + switchday; /* start day of daylight saving within the year */
       }
-      daylight_start = (daylight_start * 86400) + ptz->time + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
+      daylight_start = (daylight_start * 86400) + ptz->time; /* time offset of begin of the daylight saving within the year in seconds */
 
       /* ------------------------------------------------------------------------- */
 
@@ -1190,7 +1190,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
          standard_start = month_start_day + switchday; /* start day of standard time within the year */
       }
-      standard_start = (standard_start * 86400) + ptz->time + ptzi->daylight.bias;  /* time offset of returning to the standard time in the year in seconds */
+      standard_start = (standard_start * 86400) + ptz->time + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
 
       /* ------------------------------------------------------------------------- */
 
@@ -1289,9 +1289,9 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       int64_t  year;
 
       if (time < 0)
-         year  = time / ((int64_t) 146097 * 86400) - 1; /* calculate the 400 year epoche before that time */
+         year = time / ((int64_t) 146097 * 86400) - 1; /* calculate the 400 year epoche before that time */
       else
-         year  = time / ((int64_t) 146097 * 86400); /* calculate the 400 year epoche before that time */
+         year = time / ((int64_t) 146097 * 86400); /* calculate the 400 year epoche before that time */
 
       time -= year * ((int64_t) 146097 * 86400); /* time is between 0 an 400 AD now */
       year *= 400; /* number of years */

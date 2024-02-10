@@ -30,7 +30,7 @@ struct  _TZ_VALUE
 };
 
 extern struct TZ_VALUE timezones[]; /* NULL terminated array of TZ values */
-size_t  num_timezones();            /* returns the array size of timezones */
+extern size_t num_timezones;        /* numbers of timezones in the array */
 
 #ifdef __cplusplus
 }/* extern "C" */
@@ -79,12 +79,9 @@ fi | sort >> tz_value.c
 echo '      { NULL, NULL }}; /* termination of array */
 
 /* ------------------------------------------------------------------------- *\
-   num_timezones returns the array size of timezones
+   num_timezones contains the nomer of timezones
 \* ------------------------------------------------------------------------- */
-size_t  num_timezones()
-{
-   return (sizeof(timezones) / sizeof(timezones[0]) - 1);
-} /* size_t  num_timezones() */
+size_t num_timezones = sizeof(timezones) / sizeof(timezones[0]) - 1;
 
 /* ========================================================================= *\
  * END OF FILE                                                               *

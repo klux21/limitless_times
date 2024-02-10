@@ -21,7 +21,7 @@ struct  _TZ_VALUE
 };
 
 extern struct TZ_VALUE timezones[]; /* NULL terminated array of TZ values */
-size_t  num_timezones();            /* returns the array size of timezones */
+extern size_t num_timezones;        /* numbers of timezones in the array */
 
 #ifdef __cplusplus
 }/* extern "C" */

@@ -606,12 +606,9 @@ struct TZ_VALUE timezones[] = {
       { NULL, NULL }}; /* termination of array */
 
 /* ------------------------------------------------------------------------- *\
-   num_timezones returns the array size of timezones
+   num_timezones contains the nomer of timezones
 \* ------------------------------------------------------------------------- */
-size_t  num_timezones()
-{
-   return (sizeof(timezones) / sizeof(timezones[0]) - 1);
-} /* size_t  num_timezones() */
+size_t num_timezones = sizeof(timezones) / sizeof(timezones[0]) - 1;
 
 /* ========================================================================= *\
  * END OF FILE                                                               *

@@ -79,7 +79,7 @@ fi | sort >> tz_value.c
 echo '      { NULL, NULL }}; /* termination of array */
 
 /* ------------------------------------------------------------------------- *\
-   num_timezones contains the nomer of timezones
+   num_timezones contains the number of timezones
 \* ------------------------------------------------------------------------- */
 size_t num_timezones = sizeof(timezones) / sizeof(timezones[0]) - 1;
 

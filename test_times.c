@@ -88,7 +88,8 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . test_times.c time_api.c  
 
 #include <time_api.h>
 
-#ifdef _WIN32
+#if defined (_WIN32) || defined (__CYGWIN__)
+void (WINAPI * vGetSystemTimePreciseAsFileTime)(LPFILETIME lpSystemTimeAsFileTime);
 
 /* ------------------------------------------------------------------------- *\
    UnixTime delivers the Unix time in microsecond (time since 01/01/1970)
@@ -97,7 +98,11 @@ int64_t UnixTime()
 {
    int64_t iRet;
    FILETIME CurrentTime;
-   GetSystemTimeAsFileTime(&CurrentTime);
+
+   if(vGetSystemTimePreciseAsFileTime)
+      vGetSystemTimePreciseAsFileTime(&CurrentTime);
+   else
+      GetSystemTimeAsFileTime(&CurrentTime);
 
    iRet  = ((int64_t) CurrentTime.dwHighDateTime << 32);
    iRet += (int64_t)  CurrentTime.dwLowDateTime;
@@ -758,6 +763,14 @@ int main(int argc, char * argv[])
    }
 #else
     setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+#endif
+
+#if defined (_WIN32) || defined (__CYGWIN__)
+    {
+        HMODULE hmKernel32Dll = LoadLibrary("Kernel32.dll");
+        if(hmKernel32Dll)
+           vGetSystemTimePreciseAsFileTime = (void (WINAPI * )(LPFILETIME)) GetProcAddress(hmKernel32Dll, "GetSystemTimePreciseAsFileTime");
+    }
 #endif
 
     if(!test_time_range())

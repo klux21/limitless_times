@@ -334,14 +334,20 @@ int test_speed()
    i  = 1000000;
    t0 = UnixTime();
    while (i--)
+   {
+      stm.tm_isdst = -1;
       tt = new_mktime(&stm);
+   }
    t1 = UnixTime() - t0;
    fprintf(stdout, "An average ____ new_mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
    t0 = UnixTime();
    while (i--)
+   {
+      stm.tm_isdst = -1;
       ot = mktime(&stm);
+   }
    t1 = UnixTime() - t0;
    fprintf(stdout, "An average ________ mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 

@@ -776,10 +776,11 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
 
 
 /* ------------------------------------------------------------------------- *\
-   b_read_TZ parses a TZ evironment variable conform string for the time
-   zone rules and stores this rules in success case in pzi.
-   The function rturns nonzero in success case.
-   If the function fails because of an invalid string then pzi is unchanged.
+   b_read_TZ parses a Unix conform TZ evironment variable conform string for
+   the time zone rules and stores this rules in success case in a struct
+   TIME_ZONE_INFO. The function returns nonzero in success case only.
+   If the function fails because of an invalid string then the strage that
+   ptzi points to is unchanged.
 \* ------------------------------------------------------------------------- */
 
 int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
@@ -985,7 +986,7 @@ static const uint8_t mod_7[] = {0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1
                                 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
                                 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
                                 0,1,2,3,4,5 };
-                                                      /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
+                                                       /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
 static const uint8_t  days_of_month_array[12]               = {31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
 static const uint16_t startday_of_month_array[12]           = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
 static const uint8_t  days_of_month_array_leap_year[12]     = {31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */

@@ -89,31 +89,47 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . test_times.c time_api.c  
 #include <time_api.h>
 
 #if defined (_WIN32) || defined (__CYGWIN__)
-void (WINAPI * vGetSystemTimePreciseAsFileTime)(LPFILETIME lpSystemTimeAsFileTime);
+
+static void (WINAPI * vGetSystemTimePreciseAsFileTime)(LPFILETIME lpSystemTimeAsFileTime);
+static HMODULE hmKernel32Dll = (HMODULE) -1;
 
 /* ------------------------------------------------------------------------- *\
-   UnixTime delivers the Unix time in microsecond (time since 01/01/1970)
+   unix_time returns the Unix time in microsecond (time since 01/01/1970)
 \* ------------------------------------------------------------------------- */
-int64_t UnixTime()
+int64_t unix_time()
 {
    int64_t iRet;
    FILETIME CurrentTime;
 
    if(vGetSystemTimePreciseAsFileTime)
+   {
       vGetSystemTimePreciseAsFileTime(&CurrentTime);
+   }
+   else if(hmKernel32Dll == (HMODULE) -1)
+   { /* 1rst call */
+      hmKernel32Dll = LoadLibrary("Kernel32.dll");
+      if(hmKernel32Dll)
+         vGetSystemTimePreciseAsFileTime = (void (WINAPI * )(LPFILETIME)) GetProcAddress(hmKernel32Dll, "GetSystemTimePreciseAsFileTime");
+
+      if(vGetSystemTimePreciseAsFileTime)
+         vGetSystemTimePreciseAsFileTime(&CurrentTime);
+      else
+         GetSystemTimeAsFileTime(&CurrentTime);
+   }
    else
+   {
       GetSystemTimeAsFileTime(&CurrentTime);
+   }
 
    iRet  = ((int64_t) CurrentTime.dwHighDateTime << 32);
    iRet += (int64_t)  CurrentTime.dwLowDateTime;
    iRet -= (int64_t)  116444736 * 1000000 * 1000; /* offset of Windows FileTime to start of Unix time */
-
    return (iRet / 10);
-}/* int64_t UnixTime() */
+}/* int64_t unix_time() */
 
 #else
 
-int64_t UnixTime()
+int64_t unix_time()
 {
    int64_t tRet;
    struct timeval tv;
@@ -129,7 +145,7 @@ int64_t UnixTime()
    tRet *= 1000000ul;
    tRet += tv.tv_usec;
    return (tRet);
-}/* int64_t UnixTime() */
+}/* int64_t unix_time() */
 #endif
 
 
@@ -288,8 +304,8 @@ int test_speed()
    int bRet = 0;
    struct tm stm;
    struct tm otm;
-   time_t ot = UnixTime();
-   time_t tt = UnixTime();
+   time_t ot = unix_time();
+   time_t tt = unix_time();
    time_t t0;
    time_t t1;
    int64_t i;
@@ -308,25 +324,25 @@ int test_speed()
    stm.tm_isdst = -1;
 
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
       tt = new_mkgmtime(&stm);
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average __ new_mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
 #ifdef _WIN32
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
       ot = mkgmtime(&stm);
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average ______ mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 #else
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
       ot = timegm(&stm);
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average ________ timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 #endif
 
@@ -337,23 +353,23 @@ int test_speed()
    }
 
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
    {
       stm.tm_isdst = -1;
       tt = new_mktime(&stm);
    }
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average ____ new_mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
    {
       stm.tm_isdst = -1;
       ot = mktime(&stm);
    }
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average ________ mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if (ot != tt)
@@ -363,17 +379,17 @@ int test_speed()
    }
 
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
       new_gmtime_r(&tt, &stm);
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average __ new_gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
       gmtime_r(&tt, &otm);
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average ______ gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if(   (otm.tm_year  != stm.tm_year)
@@ -394,17 +410,17 @@ int test_speed()
    }
 
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
       new_localtime_r(&tt, &stm);
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average new_localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
-   t0 = UnixTime();
+   t0 = unix_time();
    while (i--)
       localtime_r(&tt, &otm);
-   t1 = UnixTime() - t0;
+   t1 = unix_time() - t0;
    fprintf(stdout, "An average ___ localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if(   (otm.tm_year  != stm.tm_year)
@@ -449,8 +465,8 @@ int test_conversions()
    int bRet = 0;
    struct tm stm;
    struct tm otm;
-   time_t ot = UnixTime();
-   time_t tt = UnixTime();
+   time_t ot = unix_time();
+   time_t tt = unix_time();
    time_t t;
    int64_t i;
    char * pz = getenv("TZ");
@@ -763,14 +779,6 @@ int main(int argc, char * argv[])
    }
 #else
     setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-#endif
-
-#if defined (_WIN32) || defined (__CYGWIN__)
-    {
-        HMODULE hmKernel32Dll = LoadLibrary("Kernel32.dll");
-        if(hmKernel32Dll)
-           vGetSystemTimePreciseAsFileTime = (void (WINAPI * )(LPFILETIME)) GetProcAddress(hmKernel32Dll, "GetSystemTimePreciseAsFileTime");
-    }
 #endif
 
     if(!test_time_range())

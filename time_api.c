@@ -482,8 +482,8 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    if(!leap_year && (day >= 59))
       ++day; /* we have to skip the 29th of February in our tables */
 
-   ptm->tm_mon  = mon[(size_t) day];
-   ptm->tm_mday = mday[(size_t) day];
+   ptm->tm_mon  = mon[day];
+   ptm->tm_mday = mday[day];
 
    ptm->tm_hour = (time_of_day / 3600);
    ptm->tm_min  = (time_of_day % (3600)) / 60;

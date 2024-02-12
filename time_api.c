@@ -414,7 +414,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    year *= 400;  /* year contains the Gregorian 400 year epoch of the time now e.g 400 for 753 AD */
    day   = (uint32_t) (time / 86400); /* calculate the days within the epoch */
    time_of_day = (uint32_t) (time - (int64_t) day * 86400); /* time of the day in seconds */
-   ptm->tm_wday = (day + 6 /* 6 is offset at 1.1.0000 */) % 7; /* day of the weak the year starts with 0=Sunday ... 6=Saturday */
+   ptm->tm_wday = (day + 6 /* 6 is offset at 1.1.0000 */) % 7; /* day of the week the year starts with 0=Sunday ... 6=Saturday */
 
    if (day >= 36525)
    { /* if the time is more than 100 years after the start of a 400 years epoch */
@@ -1127,7 +1127,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
       int32_t switchday;
 
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
-      wday_year_start = (int32_t)(((tt / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the weak the year starts with 0=Sunday 1= Monday ... */
+      wday_year_start = (int32_t)(((tt / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
 
       /* ------------------------------------------------------------------------- */
 
@@ -1363,7 +1363,7 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
                      + time_of_day;          /* time since begin of the day */
 
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
-      wday_year_start = (int32_t)((((time - time_of_year) / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the weak the year starts with 0=Sunday 1= Monday ... */
+      wday_year_start = (int32_t)((((time - time_of_year) / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
 
       if(!leap_year)
       {

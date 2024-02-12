@@ -1,44 +1,41 @@
 limitless_times - time handling functions which overcome some annoying limits
 
-It did bother me that several time function are not only quite slow but also
-that it's not even possible to use those for the calculate my own age. It's
-just because of the implementations of functions like mktime or gmtime of
-most systems and C compilers are unable to handle dates before 1970 despite
-that the time_t value is a signed data type. Beside of that is there the
-nightmare of the daylight saving in the different times zones and correct
-time diffing between the times of different zones. It's kind of easy to do of
-course once you aware of the daylight saving rules as provided by the tz
-library. As it comes to myself I need some really fast and reliable functions
-for my application and network logging at the manufacturers all over the
-world. 
+It did bother me since a while that the common time functions in C are not only
+quite slow usually but that it's not even possible to use them for any dates
+and times before 1970. It's because the implementations of those functions are
+usually unable to handle any negative time_t values.
+Beside of that is there that nightmare of the daylight saving rules in the
+different times zones. It's not hard to handle of course as long as you know
+the daylight saving rules. And if it comes to myself I did want some fast and
+reliable functions for my own applications and the network logging in the
+different systems all over the world.
 
 The wrappers for gmtime_r, mkgmtime, mktime and localtime_r here can handle
 Gregorian time even back to the age of dinosaur and also the same time span
 ahead in the future.
+And there are the functions mktime_of_zone() and localtime_of_zone() as well
+which enable a thread save conversion between time_t and the times in given
+time zones and care about the daylight saving rules of those zones.
 
-And there are the functions mktime_of_zone() and localtime_of_zone() that
-provide a thread save conversions between time_t and the times of different
-time zones then the local one and care about the daylight saving rules of
-the several time zones.
-
-Thread safety is is till an issue in new_mktime() and new_localtime_r()
-because that caring of an environment parameter like TZ which that can be
-adjusted at runtime requires updates of static pre-calculated values which
-contain the time-zone information.
-For being thread safe you need to call new_mktime() or update_time_zone_info()
-before creating any threads. After every change of TZ afterwards
-update_time_zone_info() must be called for the activation of the changes. 
+Thread safety is still a little issue in the wrappers new_mktime() and
+new_localtime_r() because the function are relying of the environment parameter
+TZ which can be adjusted at runtime. For speeding up the things a static
+pre-calculated struct is used that contains the local time-zone information.
+For being thread safe you need to call update_time_zone_info() before creating
+any threads. After a changes of TZ or the local time zone afterwards
+update_time_zone_info() needs to be called again to activate the settings.
+The update of the static information isn't yet thread save implemented.
 
 The support of the daylight saving rules are not that funny to implement but
 new_mktime and new localtime_r should handle them right as long as the
 environment variable TZ is set and conforms the Unix standard.
 
-The values right searched in /etc/localtime if TZ referes to a file there as
-common in many Unix systems. The algorythm doesn't cares the true binary
-format of the time zone data base files but looks for the TZ value
-at the end of that file only. This hack should work in Linux and BSD for most
-countries and time zones but the big bunch of the historical daylight saving
-time rules which may apply in case of historical times are still ignored.
+The default value is searched in /etc/localtime if that file exists as common
+in many Unix systems. The algorythm doesn't cares the true binary format of
+the time zone data base files but extracts the TZ value at the end of that
+file only. This hack should work in Linux and BSD for most countries and time
+zones but the big bunch of the historical daylight saving time rules which may
+apply in case of historical times are currently ignored.
 
 Of course I doubt that any of us will go back in time for enjoying those old
 days again and for this it shouldn't be a big problem. Be aware that functions
@@ -56,12 +53,12 @@ The Gregorian year lasts currently a bit longer than a tropical year either
 but in a few ten thousend years in the future after the earth rotation has
 slowed down a bit more then the time will match it's rotation again and for
 this it seems to be a rather academic problem of some nitpickers only who have
-no patience to wait a little bit.
+no patience to wait that time.
 
 For testing the functions and comparing the speed with the compiler build-in
 functions you may execute the test_times.c as shell script in a Linux or BSD
 system of your choise where you have access the compiler.
-I did share my little test solution for Visual Studio as well.
+I did share my little test solution for Visual Studio as well now.
 
 Why that 'Civil Usage Public License'?
 The license is kind a mix of the conditions of BSD or Apache license but in

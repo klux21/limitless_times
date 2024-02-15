@@ -222,7 +222,7 @@ int test_time_range()
 
        gmtime_r (&t, &stm);
        if(   (stm.tm_year != year + 1 - 1900)
-          || (stm.tm_mon  != 0) /* December */
+          || (stm.tm_mon  != 0) /* January */
           || (stm.tm_mday != 1)
           || (stm.tm_hour != 0) /* assumes UTC */
           || (stm.tm_min  != 0)
@@ -239,7 +239,7 @@ int test_time_range()
        localtime_r(&t, &stm);
 
        if(   (stm.tm_year != year + 1 - 1900)
-          || (stm.tm_mon  != 0)  /* December */
+          || (stm.tm_mon  != 0)  /* January */
           || (stm.tm_mday != 1)
           || (stm.tm_hour != 0)  /* because CET */
           || (stm.tm_min  != 0)
@@ -393,9 +393,9 @@ int test_speed()
    fprintf(stdout, "An average ______ gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if(   (otm.tm_year  != stm.tm_year)
-      || (otm.tm_mon   != stm.tm_mon) /* December */
+      || (otm.tm_mon   != stm.tm_mon)
       || (otm.tm_mday  != stm.tm_mday)
-      || (otm.tm_hour  != stm.tm_hour) /* assumes CET */
+      || (otm.tm_hour  != stm.tm_hour)
       || (otm.tm_min   != stm.tm_min)
       || (otm.tm_sec   != stm.tm_sec)
       || (otm.tm_wday  != stm.tm_wday)
@@ -424,9 +424,9 @@ int test_speed()
    fprintf(stdout, "An average ___ localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if(   (otm.tm_year  != stm.tm_year)
-      || (otm.tm_mon   != stm.tm_mon) /* December */
+      || (otm.tm_mon   != stm.tm_mon)
       || (otm.tm_mday  != stm.tm_mday)
-      || (otm.tm_hour  != stm.tm_hour) /* assumes CET */
+      || (otm.tm_hour  != stm.tm_hour)
       || (otm.tm_min   != stm.tm_min)
       || (otm.tm_sec   != stm.tm_sec)
       || (otm.tm_wday  != stm.tm_wday)
@@ -810,6 +810,6 @@ int main(int argc, char * argv[])
 }/* main() */
 
 
-/* ========================================================================== *\
+/* ========================================================================= *\
    END OF FILE
-\* ========================================================================== */
+\* ========================================================================= */

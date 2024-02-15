@@ -4,7 +4,7 @@
 # 
 # This script is nothing but a first hack for extracting a list of the TZ values of the different
 # locations from the time zone database of a Linux or BSD system. 
-
+set -x
 
 echo \
 '/* ========================================================================= *\
@@ -22,14 +22,14 @@ echo \
 extern "C" {
 #endif
 
-typedef struct _TZ_VALUE TZ_VALUE;
-struct  _TZ_VALUE
+typedef struct TZ_VALUE_S TZ_VALUE;
+struct  TZ_VALUE_S
 {
    const char * name; /* name of the location or time zone */
    const char * tz;   /* TZ value for the location or time zone */
 };
 
-extern struct TZ_VALUE timezones[]; /* NULL terminated array of TZ values */
+extern TZ_VALUE timezones[]; /* NULL terminated array of TZ values */
 extern size_t num_timezones;        /* numbers of timezones in the array */
 
 #ifdef __cplusplus
@@ -53,7 +53,7 @@ echo \
 
 #include <tz_value.h>
 
-struct TZ_VALUE timezones[] = {'\
+TZ_VALUE timezones[] = {'\
  > tz_value.c
 
 

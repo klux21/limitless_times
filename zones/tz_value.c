@@ -6,7 +6,7 @@
 
 #include <tz_value.h>
 
-struct TZ_VALUE timezones[] = {
+TZ_VALUE timezones[] = {
       {"Africa/Abidjan", "GMT0" },
       {"Africa/Accra", "GMT0" },
       {"Africa/Addis_Ababa", "EAT-3" },

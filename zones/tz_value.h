@@ -13,14 +13,14 @@
 extern "C" {
 #endif
 
-typedef struct _TZ_VALUE TZ_VALUE;
-struct  _TZ_VALUE
+typedef struct TZ_VALUE_S TZ_VALUE;
+struct  TZ_VALUE_S
 {
    const char * name; /* name of the location or time zone */
    const char * tz;   /* TZ value for the location or time zone */
 };
 
-extern struct TZ_VALUE timezones[]; /* NULL terminated array of TZ values */
+extern TZ_VALUE timezones[]; /* NULL terminated array of TZ values */
 extern size_t num_timezones;        /* numbers of timezones in the array */
 
 #ifdef __cplusplus

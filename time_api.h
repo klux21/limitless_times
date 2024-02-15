@@ -72,8 +72,8 @@
 *                                                                             *
 \*****************************************************************************/
 
-#ifndef _TIME_API_H
-#define _TIME_API_H
+#ifndef TIME_API_H
+#define TIME_API_H
 
 #include <stddef.h>
 #include <time.h>      /* struct tm and localtime_r */
@@ -213,8 +213,8 @@ struct tm * new_localtime_r(const time_t * pt, struct tm * ptm);
    of static timezone information!
 \* ------------------------------------------------------------------------- */
 
-typedef struct _TIME_ZONE_RULE TIME_ZONE_RULE;
-struct _TIME_ZONE_RULE
+typedef struct TIME_ZONE_RULE_S TIME_ZONE_RULE;
+struct TIME_ZONE_RULE_S
 {
    int32_t bias;     /* UTC = local time + bias */
 
@@ -228,8 +228,8 @@ struct _TIME_ZONE_RULE
    char    zone_name[72]; /* name of that time zone */
 };
 
-typedef struct _TIME_ZONE_INFO TIME_ZONE_INFO;
-struct _TIME_ZONE_INFO
+typedef struct TIME_ZONE_INFO_S TIME_ZONE_INFO;
+struct TIME_ZONE_INFO_S
 {
    TIME_ZONE_RULE standard; /* standard time rules */
    TIME_ZONE_RULE daylight; /* daylight saving time rules */
@@ -276,7 +276,7 @@ struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * 
 }/* extern "C" */
 #endif
 
-#endif /* _TIME_API_H */
+#endif /* TIME_API_H */
 
 /* ========================================================================= *\
    END OF FILE

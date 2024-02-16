@@ -4,6 +4,7 @@
  *                ---  This file is in the public domain.  ---               *
 \* ========================================================================= */
 
+#include <string.h>
 #include <tz_value.h>
 
 TZ_VALUE timezones[] = {
@@ -609,6 +610,52 @@ TZ_VALUE timezones[] = {
    num_timezones contains the number of timezones
 \* ------------------------------------------------------------------------- */
 size_t num_timezones = sizeof(timezones) / sizeof(timezones[0]) - 1;
+
+/* ------------------------------------------------------------------------- *\
+   pc_find_TZ searches a location or a time zone name in the timezone array
+   and returns either a pointer to the related TZ value or NULL if the name
+   was not found in that array.
+\* ------------------------------------------------------------------------- */
+const char * pc_find_TZ(const char * name)
+{
+   const char * ptz = NULL;
+   TZ_VALUE *   ptv = timezones;
+   size_t       count = num_timezones; 
+   
+   while(count--)
+   {
+      if (!strcmp(ptv->name, name))
+      {
+         ptz = ptv->tz;
+         goto Exit;
+      }
+
+      ++ptv;
+   }
+
+   /* check wether a city or zone name was specified without the region prefix */
+   ptv   = timezones;
+   count = num_timezones;
+
+   while(count--)
+   {
+      const char * pn = strchr(ptv->name, '/');
+      while(pn)
+      {
+         if (!strcmp(pn + 1, name))
+         {
+            ptz = ptv->tz;
+            goto Exit;
+         }
+         pn = strchr(pn + 1, '/');
+      }
+
+      ++ptv;
+   }
+
+   Exit:;
+   return (ptz);
+} /* const char * pc_find_TZ(...) */
 
 /* ========================================================================= *\
  * END OF FILE                                                               *

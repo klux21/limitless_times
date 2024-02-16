@@ -1,5 +1,5 @@
 #if 0
-rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . test_times.c time_api.c  ; ./_test_times ; exit $?
+rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . -I zones test_times.c time_api.c zones/tz_value.c ; ./_test_times ; exit $?
 #endif
 
 /*****************************************************************************\
@@ -87,6 +87,7 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . test_times.c time_api.c  
 #endif
 
 #include <time_api.h>
+#include <tz_value.h>
 
 #if defined (_WIN32) || defined (__CYGWIN__)
 
@@ -732,81 +733,86 @@ int test_conversions()
 \* ------------------------------------------------------------------------- */
 int main(int argc, char * argv[])
 {
-    int iRet = 1;
+   int iRet = 1;
 
-#ifdef _WIN32
-   /* tzset() in VC++ is unable to handle the daylight saving rules of the TZ variables right :o(
-      For this we use b_read_TZ for parsing the data and SetTimeZoneInformation for setting this. */
+   const char * pTZ = pc_find_TZ("Paris");
 
-#if 0
-   putenv("TZ=CET-1CEST,M3.5.0,M10.5.0/3");
-   tzset();
-#endif
-
-   TIME_ZONE_INFO ti;
-   TIME_ZONE_INFORMATION tzi;
-
-   if(!b_read_TZ (&ti, "CET-1CEST,M3.5.0,M10.5.0/3"))
+   if(!pTZ || strcmp(pTZ, "CET-1CEST,M3.5.0,M10.5.0/3"))
    {
-      printf("b_read_TZ (\"CET-1CEST,M3.5.0,M10.5.0/3\") has failed!\n");
+      printf("pc_find_TZ failed! Return value was '%s'!\n", pTZ ? pTZ : "<NULL>" );
       goto Exit;
    }
-
-   memset(&tzi, 0, sizeof(tzi));
-   tzi.Bias = 0;
-   tzi.StandardName[0]         = 'S';
-   tzi.StandardDate.wMonth     = ti.standard.month + 1;
-   tzi.StandardDate.wDayOfWeek = ti.standard.wday;
-   tzi.StandardDate.wDay       = ti.standard.mweek;
-   tzi.StandardDate.wHour      = ti.standard.time / 3600;
-   tzi.StandardDate.wMinute    = (ti.standard.time - tzi.StandardDate.wHour * 3600) / 60;
-   tzi.StandardDate.wSecond    = ti.standard.time % 60;
-   tzi.StandardBias            = ti.standard.bias / 60;
-
-   tzi.DaylightName[0]         = 'D';
-   tzi.DaylightDate.wMonth     = ti.daylight.month + 1;
-   tzi.DaylightDate.wDayOfWeek = ti.daylight.wday;
-   tzi.DaylightDate.wDay       = ti.daylight.mweek;
-   tzi.DaylightDate.wHour      = ti.daylight.time / 3600;
-   tzi.DaylightDate.wMinute    = (ti.daylight.time - tzi.DaylightDate.wHour * 3600) / 60;
-   tzi.DaylightDate.wSecond    = ti.daylight.time % 60;
-   tzi.DaylightBias            = ti.daylight.bias / 60;
-
-   if(!SetTimeZoneInformation( &tzi))
-   {
-      printf("SetTimeZoneInformation failed (error=%d)\n", GetLastError());
-      goto Exit;
-   }
-#else
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-#endif
-
-    if(!test_time_range())
-       goto Exit;
-
-    if(!test_speed())
-       goto Exit;
-
-    if(!test_conversions())
-       goto Exit;
 
 #ifndef _WIN32
-    setenv("TZ", "UTC0", 1);
+   setenv("TZ", pTZ, 1);
 #else
-    putenv("TZ=UTC0");
+   if(pTZ)
+   { /* tzset() in VC++ is unable to handle the daylight saving rules of the TZ variables right :o(
+         For this we use b_read_TZ for parsing the data and SetTimeZoneInformation for setting this. */
+    
+      TIME_ZONE_INFO ti;
+      TIME_ZONE_INFORMATION tzi;
+
+      if(!b_read_TZ (&ti, pTZ))
+      {
+         printf("b_read_TZ (\"%s\") has failed!\n", pTZ);
+         goto Exit;
+      }
+
+      memset(&tzi, 0, sizeof(tzi));
+      tzi.Bias = 0;
+      tzi.StandardName[0]         = 'S';
+      tzi.StandardDate.wMonth     = ti.standard.month + 1;
+      tzi.StandardDate.wDayOfWeek = ti.standard.wday;
+      tzi.StandardDate.wDay       = ti.standard.mweek;
+      tzi.StandardDate.wHour      = ti.standard.time / 3600;
+      tzi.StandardDate.wMinute    = (ti.standard.time - tzi.StandardDate.wHour * 3600) / 60;
+      tzi.StandardDate.wSecond    = ti.standard.time % 60;
+      tzi.StandardBias            = ti.standard.bias / 60;
+
+      tzi.DaylightName[0]         = 'D';
+      tzi.DaylightDate.wMonth     = ti.daylight.month + 1;
+      tzi.DaylightDate.wDayOfWeek = ti.daylight.wday;
+      tzi.DaylightDate.wDay       = ti.daylight.mweek;
+      tzi.DaylightDate.wHour      = ti.daylight.time / 3600;
+      tzi.DaylightDate.wMinute    = (ti.daylight.time - tzi.DaylightDate.wHour * 3600) / 60;
+      tzi.DaylightDate.wSecond    = ti.daylight.time % 60;
+      tzi.DaylightBias            = ti.daylight.bias / 60;
+
+      if(!SetTimeZoneInformation( &tzi))
+      {
+         printf("SetTimeZoneInformation failed (error=%d)\n", GetLastError());
+         goto Exit;
+      }
+   }
 #endif
-    tzset();
-    update_time_zone_info();
 
-    if(!test_speed())
-       goto Exit;
+   if(!test_time_range())
+      goto Exit;
 
-    if(!test_conversions())
-       goto Exit;
+   if(!test_speed())
+      goto Exit;
 
-    iRet = 0;
-    Exit:;
-    return(iRet);
+   if(!test_conversions())
+      goto Exit;
+
+#ifndef _WIN32
+   setenv("TZ", "UTC0", 1);
+#else
+   putenv("TZ=UTC0");
+#endif
+   tzset();
+   update_time_zone_info();
+
+   if(!test_speed())
+      goto Exit;
+
+   if(!test_conversions())
+      goto Exit;
+
+   iRet = 0;
+   Exit:;
+   return(iRet);
 }/* main() */
 
 

@@ -21,7 +21,14 @@ struct  TZ_VALUE_S
 };
 
 extern TZ_VALUE timezones[]; /* NULL terminated array of TZ values */
-extern size_t num_timezones;        /* numbers of timezones in the array */
+extern size_t num_timezones; /* numbers of timezones in the array */
+
+/* ------------------------------------------------------------------------- *\
+   pc_find_TZ searches a location or a time zone name in the timezone array
+   and returns either a pointer to the related TZ value or NULL if the name
+   was not found in that array.
+\* ------------------------------------------------------------------------- */
+const char * pc_find_TZ(const char * name); 
 
 #ifdef __cplusplus
 }/* extern "C" */

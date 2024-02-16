@@ -48,7 +48,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..,../Win32"
+				AdditionalIncludeDirectories=".,..,../zones,../Win32"
 				PreprocessorDefinitions="MEMORY_CHECK=1;WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -138,7 +138,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..,../Win32"
+				AdditionalIncludeDirectories=".,..,../zones,../Win32"
 				PreprocessorDefinitions="MEMORY_CHECK=1;WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -228,7 +228,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..,../Win32"
+				AdditionalIncludeDirectories=".,..,../zones,../Win32"
 				PreprocessorDefinitions="MEMORY_CHECK=1;WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -317,7 +317,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..,../Win32"
+				AdditionalIncludeDirectories=".,..,../zones,../Win32"
 				PreprocessorDefinitions="MEMORY_CHECK=1;WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -390,6 +390,10 @@
 				RelativePath="..\time_api.c"
 				>
 			</File>
+			<File
+				RelativePath="..\zones\tz_value.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -401,6 +405,10 @@
 			</File>
 			<File
 				RelativePath="..\time_api.h"
+				>
+			</File>
+			<File
+				RelativePath="..\zones\tz_value.h"
 				>
 			</File>
 			<File
@@ -418,6 +426,14 @@
 			</File>
 			<File
 				RelativePath=".\time_api.rc"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="scripts"
+			>
+			<File
+				RelativePath="..\zones\get_tz_values"
 				>
 			</File>
 		</Filter>

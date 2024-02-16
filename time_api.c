@@ -94,7 +94,7 @@
 #endif/* #ifdef _WIN32 */
 
 #include <time_api.h>
-
+#include <tz_value.h>
 
 /* ========================================================================= *\
    Routines for calculating calendar week of a given date
@@ -713,7 +713,15 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
 
    if(*ps == '/')
    { /* activation time specified */
+      int32_t sign = 0;
+
       ++ps;
+
+      if(*ps == '-')
+      {
+         sign = 1;
+         ++ps;
+      }
 
       if ((*ps < '0') || (*ps > '9'))
          goto Exit; /* TZ format error :o( */
@@ -721,9 +729,9 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
       hour = *ps++ - '0';
 
       if ((*ps >= '0') && (*ps <= '9'))
-          hour = (hour * 10) + (*ps++ - '0');
+         hour = (hour * 10) + (*ps++ - '0');
 
-      if(hour > 24)
+      if(hour > 75)
          goto Exit;
 
       if(*ps == ':')
@@ -739,7 +747,7 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
             minutes = (minutes * 10) + (*ps++ - '0');
 
          if(minutes > 59)
-             goto Exit;
+            goto Exit;
 
          if(*ps == ':')
          { /* seconds specified */
@@ -753,9 +761,16 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
             if ((*ps >= '0') && (*ps <= '9'))
                seconds = (seconds * 10) + (*ps++ - '0');
 
-            if(minutes > 59)
+            if(seconds > 59)
                goto Exit;
          }
+      }
+
+      if(sign)
+      {
+         hour    *= -1;
+         seconds *= -1;
+         minutes *= -1;
       }
    }
 

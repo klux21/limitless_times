@@ -197,10 +197,6 @@ int calendar_week_of_time(time_t tt)
 } /* int calendar_week_of_time(time_t tt) */
 
 
-/* ========================================================================= *\
-   Wrappers for some Unix functions that may be missing in Windows
-\* ========================================================================= */
-
 /* ------------------------------------------------------------------------- *\
    new_mkgmtime is a mkgmtime (timegm) implementation
 \* ------------------------------------------------------------------------- */

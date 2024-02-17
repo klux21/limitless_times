@@ -239,13 +239,13 @@ struct TIME_ZONE_INFO_S
 
 
 /* ------------------------------------------------------------------------- *\
-   b_read_TZ parses a Unix conform TZ evironment variable conform string for
+   read_TZ parses a Unix conform TZ evironment variable conform string for
    the time zone rules and stores this rules in success case in a struct
    TIME_ZONE_INFO. The function returns nonzero in success case only.
    If the function fails because of an invalid string then the strage that
    ptzi points to is unchanged.
 \* ------------------------------------------------------------------------- */
-int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);
+int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);
 
 
 /* ------------------------------------------------------------------------- *\
@@ -271,6 +271,15 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi);
    ...
 \* ------------------------------------------------------------------------- */
 struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi);
+
+
+/* ------------------------------------------------------------------------- *\
+   get_local_zone_info stores the local time zone information of the system
+   in a user provided struct TIME_ZONE_INFO.
+   It returns nonzero in success case.
+\* ------------------------------------------------------------------------- */
+int get_local_zone_info(TIME_ZONE_INFO * ptzi);
+
 
 #ifdef __cplusplus
 }/* extern "C" */

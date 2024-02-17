@@ -734,8 +734,17 @@ int test_conversions()
 int main(int argc, char * argv[])
 {
    int iRet = 1;
+   TIME_ZONE_INFO tzi;
+   TIME_ZONE_INFO tzi_local;
 
    const char * pTZ = pc_find_TZ("Paris");
+
+#ifdef _WIN32
+   TIME_ZONE_INFORMATION wtz_orig;
+   /* remember the Windows time zone for restoring it afte the test */
+   memset(&wtz_orig, 0, sizeof(wtz_orig));
+   GetTimeZoneInformation(&wtz_orig);
+#endif
 
    if(!pTZ || strcmp(pTZ, "CET-1CEST,M3.5.0,M10.5.0/3"))
    {
@@ -749,43 +758,66 @@ int main(int argc, char * argv[])
    if(pTZ)
    { /* tzset() in VC++ is unable to handle the daylight saving rules of the TZ variables right :o(
          For this we use b_read_TZ for parsing the data and SetTimeZoneInformation for setting this. */
-    
-      TIME_ZONE_INFO ti;
-      TIME_ZONE_INFORMATION tzi;
+      TIME_ZONE_INFORMATION wtz;
+      WCHAR *               pwn = wtz.StandardName;
+      CHAR *                pn  = tzi.standard.zone_name;
 
-      if(!b_read_TZ (&ti, pTZ))
+      if(!read_TZ (&tzi, pTZ))
       {
-         printf("b_read_TZ (\"%s\") has failed!\n", pTZ);
+         printf("read_TZ (\"%s\") has failed!\n", pTZ);
          goto Exit;
       }
 
-      memset(&tzi, 0, sizeof(tzi));
-      tzi.Bias = 0;
-      tzi.StandardName[0]         = 'S';
-      tzi.StandardDate.wMonth     = ti.standard.month + 1;
-      tzi.StandardDate.wDayOfWeek = ti.standard.wday;
-      tzi.StandardDate.wDay       = ti.standard.mweek;
-      tzi.StandardDate.wHour      = ti.standard.time / 3600;
-      tzi.StandardDate.wMinute    = (ti.standard.time - tzi.StandardDate.wHour * 3600) / 60;
-      tzi.StandardDate.wSecond    = ti.standard.time % 60;
-      tzi.StandardBias            = ti.standard.bias / 60;
+      memset(&wtz, 0, sizeof(wtz));
 
-      tzi.DaylightName[0]         = 'D';
-      tzi.DaylightDate.wMonth     = ti.daylight.month + 1;
-      tzi.DaylightDate.wDayOfWeek = ti.daylight.wday;
-      tzi.DaylightDate.wDay       = ti.daylight.mweek;
-      tzi.DaylightDate.wHour      = ti.daylight.time / 3600;
-      tzi.DaylightDate.wMinute    = (ti.daylight.time - tzi.DaylightDate.wHour * 3600) / 60;
-      tzi.DaylightDate.wSecond    = ti.daylight.time % 60;
-      tzi.DaylightBias            = ti.daylight.bias / 60;
+      /* copy the time zone names */
+      while(*pwn++ = (unsigned char) *pn++) {};
 
-      if(!SetTimeZoneInformation( &tzi))
+      wtz.StandardDate.wMonth     = tzi.standard.month + 1;
+      wtz.StandardDate.wDayOfWeek = tzi.standard.wday;
+      wtz.StandardDate.wDay       = tzi.standard.mweek;
+      wtz.StandardDate.wHour      = tzi.standard.time / 3600;
+      wtz.StandardDate.wMinute    = (tzi.standard.time - wtz.StandardDate.wHour * 3600) / 60;
+      wtz.StandardDate.wSecond    = tzi.standard.time % 60;
+      wtz.StandardBias            = tzi.standard.bias / 60;
+
+      pwn = wtz.DaylightName;
+      pn  = tzi.daylight.zone_name;
+      while(*pwn++ = (unsigned char) *pn++) {};
+
+      wtz.DaylightDate.wMonth     = tzi.daylight.month + 1;
+      wtz.DaylightDate.wDayOfWeek = tzi.daylight.wday;
+      wtz.DaylightDate.wDay       = tzi.daylight.mweek;
+      wtz.DaylightDate.wHour      = tzi.daylight.time / 3600;
+      wtz.DaylightDate.wMinute    = (tzi.daylight.time - wtz.DaylightDate.wHour * 3600) / 60;
+      wtz.DaylightDate.wSecond    = tzi.daylight.time % 60;
+      wtz.DaylightBias            = tzi.daylight.bias / 60;
+
+      if(!SetTimeZoneInformation(&wtz))
       {
          printf("SetTimeZoneInformation failed (error=%d)\n", GetLastError());
          goto Exit;
       }
    }
 #endif
+
+   if(!read_TZ (&tzi, pTZ))
+   {
+      printf("read_TZ (\"%s\") has failed!\n", pTZ);
+      goto Exit;
+   }
+
+   if(!get_local_zone_info(&tzi_local))
+   {
+      printf("get_local_zone_info() has failed!\n", pTZ);
+      goto Exit;
+   }
+
+   if(memcmp(&tzi, &tzi_local, sizeof(tzi)))
+   {
+      printf("get_local_zone_info returned different settings than specified by '%s'!\n", pTZ);
+      goto Exit;
+   }
 
    if(!test_time_range())
       goto Exit;
@@ -812,6 +844,15 @@ int main(int argc, char * argv[])
 
    iRet = 0;
    Exit:;
+
+#ifdef _WIN32
+   if(!SetTimeZoneInformation(&wtz_orig))
+   {
+      printf("SetTimeZoneInformation for restoring original time zone has failed! (error=%d)\n"
+             "The Windows time zone settings are possibly invalid now!\n", GetLastError());
+   }
+#endif
+
    return(iRet);
 }/* main() */
 

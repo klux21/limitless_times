@@ -494,11 +494,11 @@ static TIME_ZONE_INFO ti;   /* static time zone information as returned by the s
 
 
 /* ------------------------------------------------------------------------- *\
-   b_get_TZ_zone_data is a helper of b_read_TZ for reading time zone name
-   and time offsets
+   read_TZ_zone_data is a helper of read_TZ for reading time zone name and
+   time offsets
 \* ------------------------------------------------------------------------- */
 
-static int b_read_TZ_zone_data (TIME_ZONE_RULE * ptr, int is_dst, char * psrc, char ** ppend)
+static int read_TZ_zone_data (TIME_ZONE_RULE * ptr, int is_dst, char * psrc, char ** ppend)
 {
    int bRet = 0;
    size_t   size    = 0;
@@ -609,15 +609,15 @@ static int b_read_TZ_zone_data (TIME_ZONE_RULE * ptr, int is_dst, char * psrc, c
    }
 
    return (bRet);
-}  /* b_read_TZ_zone_data */
+}  /* read_TZ_zone_data */
 
 
 /* ------------------------------------------------------------------------- *\
-   b_read_TZ_zone_data is a helper of b_read_TZ for reading the
-   daylight saving rules
+   read_TZ_rules is a helper of b_read_TZ for reading the daylight saving
+   rules
 \* ------------------------------------------------------------------------- */
 
-static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
+static int read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
 {
    int     bRet     = 0;
    char *  ps       = psrc;
@@ -783,18 +783,18 @@ static int b_read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
    Exit:;
 
    return (bRet);
-}  /* b_read_TZ_rules */
+}  /* read_TZ_rules */
 
 
 /* ------------------------------------------------------------------------- *\
-   b_read_TZ parses a Unix conform TZ evironment variable conform string for
+   read_TZ parses a Unix conform TZ evironment variable conform string for
    the time zone rules and stores this rules in success case in a struct
    TIME_ZONE_INFO. The function returns nonzero in success case only.
    If the function fails because of an invalid string then the strage that
    ptzi points to is unchanged.
 \* ------------------------------------------------------------------------- */
 
-int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
+int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
 {
    int     bRet = 0;
    TIME_ZONE_INFO zi;
@@ -811,20 +811,20 @@ int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
    /* Valid TZ format sample for Central European Time "CET-1CEST,M3.5.0,M10.5.0/3"
       Please check the unix standard for the format description. */
 
-   if(!b_read_TZ_zone_data (&zi.standard, 0 /* STD time */, ps, &ps))
+   if(!read_TZ_zone_data (&zi.standard, 0 /* STD time */, ps, &ps))
        goto Exit; /* TZ format error :o( */
 
    zi.type = 1; /* standard time if there is no following data */
 
-   if(b_read_TZ_zone_data (&zi.daylight, 1 /* STD time */, ps, &ps))
+   if(read_TZ_zone_data (&zi.daylight, 1 /* STD time */, ps, &ps))
    {
        if(zi.daylight.bias == 0x7fffffff)
           zi.daylight.bias = zi.standard.bias - 3600;
 
-       if(!b_read_TZ_rules (&zi.daylight, ps, &ps))
+       if(!read_TZ_rules (&zi.daylight, ps, &ps))
            goto Exit; /* TZ format error :o( */
 
-       if(!b_read_TZ_rules (&zi.standard, ps, &ps))
+       if(!read_TZ_rules (&zi.standard, ps, &ps))
            goto Exit; /* TZ format error :o( */
 
        zi.type = 2; /* standard time if there is no following data */
@@ -836,7 +836,7 @@ int b_read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
 
    Exit:;
    return(bRet);
-} /* b_read_TZ() */
+} /* read_TZ() */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -866,7 +866,7 @@ void update_time_zone_info()
 
       strncpy(last_TZ, pTZ, sizeof(last_TZ) - 1);
 
-      if (b_read_TZ(&ti, pTZ))
+      if (read_TZ(&ti, pTZ))
          goto Exit;
    }
 
@@ -932,7 +932,7 @@ void update_time_zone_info()
             if((pz != buf) && (pz != pe))
             {
                *(pe - 1) = '\0';
-               if (b_read_TZ(&ti, pz))
+               if (read_TZ(&ti, pz))
                   goto Exit;
             }
          }
@@ -943,7 +943,12 @@ void update_time_zone_info()
 #if defined(_WIN32) || defined (__CYGWIN__)
    {
       TIME_ZONE_INFORMATION tzi;
-      memset (&ti, 0, sizeof(ti));
+      WCHAR * pwn = tzi.StandardName;
+      CHAR *  pn  = ti.standard.zone_name;
+      size_t  count = sizeof(ti.standard.zone_name) - 1; 
+
+      memset (&ti,  0, sizeof(ti));
+      memset (&tzi, 0, sizeof(tzi));
 
       if (GetTimeZoneInformation(&tzi))
       {
@@ -970,6 +975,30 @@ void update_time_zone_info()
          ti.daylight.bias = ti.standard.bias;
          ti.type = 1; /* standard time only */
       }
+
+      while(count--)
+      {
+         *pn = (char) *pwn;
+         if(!*pn || (*pwn > 255))
+            break;
+         ++pn;
+         ++pwn;
+      }
+      *pn ='\0'; /* ensure string termination */
+
+      pwn   = tzi.DaylightName;
+      pn    = ti.daylight.zone_name;
+      count = sizeof(ti.daylight.zone_name) - 1; 
+
+      while(count--)
+      {
+         *pn = (char) *pwn;
+         if(!*pn || (*pwn > 255))
+            break;
+         ++pn;
+         ++pwn;
+      }
+      *pn ='\0'; /* ensure string termination */
    }
 #else
 
@@ -1513,6 +1542,31 @@ struct tm * new_localtime_r(const time_t * pt, struct tm * ptm)
 
    return localtime_of_zone(pt ? *pt : 0, ptm, &ti);
 } /* struct tm * new_localtime_r(const time_t * pt, struct tm * ptm) */
+
+
+/* ------------------------------------------------------------------------- *\
+   get_local_zone_info stores the local time zone information of the system
+   in a user provided struct TIME_ZONE_INFO. It returns nonzero in success
+   case.
+\* ------------------------------------------------------------------------- */
+int get_local_zone_info(TIME_ZONE_INFO * ptzi)
+{
+   int iret = 0;
+
+   if(!ptzi)
+       goto Exit;
+
+   if(!ti.type)
+      update_time_zone_info();
+
+   *ptzi = ti;
+
+   iret = 1;
+   Exit:;
+
+   return (iret);
+} /* int get_local_zone_info(TIME_ZONE_INFO * ptzi) */
+
 
 /* ========================================================================= *\
    END OF FILE

@@ -809,7 +809,7 @@ int main(int argc, char * argv[])
 
    if(!get_local_zone_info(&tzi_local))
    {
-      printf("get_local_zone_info() has failed!\n", pTZ);
+      printf("get_local_zone_info() has failed!\n");
       goto Exit;
    }
 

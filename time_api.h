@@ -233,7 +233,6 @@ struct TIME_ZONE_INFO_S
 {
    TIME_ZONE_RULE standard; /* standard time rules */
    TIME_ZONE_RULE daylight; /* daylight saving time rules */
-   int32_t        year;     /* for type 3 and 4 only: the year that the final rule starts */
    int32_t        type;     /* 0 = uninitialized  1 = standard time only  2 = day light saving */
 };
 

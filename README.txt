@@ -21,39 +21,39 @@ Thread safety is still a little issue in the wrappers new_mktime() and
 new_localtime_r() because the function are relying of the environment parameter
 TZ which can be adjusted at runtime. For speeding up the things a static
 pre-calculated struct is used that contains the local time-zone information.
-For being thread safe you need to call update_time_zone_info() before creating
-any threads. After a changes of TZ or the local time zone afterwards
-update_time_zone_info() needs to be called again to activate the settings.
-The update of the static information isn't yet thread save implemented.
 
+For being thread safe you need to call update_time_zone_info() before creating
+any threads. In case of changes of TZ or the local time zone afterwards
+update_time_zone_info() needs to be called again to activate the new settings.
+The update of the static information isn't yet thread save implemented.
+The C standard says about the *_r functions that they "shall not be subject
+to data races, unless the time or calendar state is changed in a multi-thread
+execution." If you really need that a mutex needs to be added.
 The support of the daylight saving rules are not that funny to implement but
 new_mktime and new localtime_r should handle them right as long as the
-environment variable TZ is set and conforms the Unix standard.
+environment variable TZ is set or can be found and conforms the Unix standard.
 
 The default value is searched in /etc/localtime if that file exists as common
-in many Unix systems. The algorythm doesn't cares the true binary format of
+in many Unix systems. The algorythm doesn't care the true binary format of
 the time zone data base files but extracts the TZ value at the end of that
 file only. This hack should work in Linux and BSD for most countries and time
 zones but the big bunch of the historical daylight saving time rules which may
 apply in case of historical times are currently ignored.
-
 Of course I doubt that any of us will go back in time for enjoying those old
 days again and for this it shouldn't be a big problem. Be aware that functions
 don't care about any leap seconds as well. Those are applied at random times
 for adjusting the Gregorian time against the UTC time a bit but a Gregorian
 year has an even bigger deviation from an average tropical year either and leap
 seconds can't fix the deviation problems that the GPS and other navigation
-systems face either. For being Unix standard conform it's required as well that
-"As represented in seconds since the Epoch, each and every day shall be
-accounted for by exactly 86400 seconds."
+systems face either. The Unix standard says "As represented in seconds since
+the Epoch, each and every day shall be accounted for by exactly 86400 seconds."
 ( https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15 )
-For this the implementations of the the most systems ignore leap seconds and
-I guess it's pretty OK to ignore leap seconds as well.
+For this the implementations of the the most systems ignore the leap seconds
+and I guess it's pretty OK to ignore them as well.
 The Gregorian year lasts currently a bit longer than a tropical year either
-but in a few ten thousend years in the future after the earth rotation has
-slowed down a bit more then the time will match it's rotation again and for
-this it seems to be a rather academic problem of some nitpickers only who have
-no patience to wait that time.
+but in a few ten thousend years after the earth rotation has slowed down a
+bit more the time will match again and for this it seems rather an academic
+problem of nitpickers only who have no patience to wait.
 
 For testing the functions and comparing the speed with the compiler build-in
 functions you may execute the test_times.c as shell script in a Linux or BSD
@@ -72,9 +72,10 @@ stuff. I don't expect anything good in return of supporting those for free.
 The license is much more permissive if it comes to commercial usage than
 something like the GPL. But despite of that it's for sure a good idea to use
 the software legally only and to care about the conditions of the license.
-Please be aware that this code is despite of its very permissive license not
-even partially public domain software!
-But now it's about time for some limitless times, don't you agree?
+Please be aware that this code is despite of its very permissive license not at
+all public domain software! Except the time zones from TZ database which remain
+public domain as in the sources from https://www.iana.org/time-zones .
+But now it's time for some limitless times, don't you agree?
 
 
 Kind regards,

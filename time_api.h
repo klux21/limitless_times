@@ -78,6 +78,7 @@
 #include <stddef.h>
 #include <time.h>      /* struct tm and localtime_r */
 #include <sys/types.h>
+#include <stdint.h>    /* int64_t etc. */
 
 #ifdef _WIN32
 #include <winsock2.h>  /* required for timeval struct */
@@ -102,6 +103,11 @@ typedef int64_t time_t;  /* time value */
 extern "C" {
 #endif
 
+/* ------------------------------------------------------------------------- *\
+   unix_time returns the Unix time in microsecond.
+   (UTC time since 01/01/1970) The precision depends on the system.
+\* ------------------------------------------------------------------------- */
+int64_t unix_time();
 
 /* ------------------------------------------------------------------------- *\
    week_of_year returns the calendar week of a given date

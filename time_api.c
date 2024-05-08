@@ -76,7 +76,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>     /* open */
 #include <stdio.h>     /* sprintf */
-#include <inttypes.h>  /* int64_t */
 #include <string.h>
 #include <stdlib.h>
 
@@ -95,6 +94,70 @@
 
 #include <time_api.h>
 #include <tz_value.h>
+
+
+#if defined (_WIN32) || defined (__CYGWIN__)
+
+/* ------------------------------------------------------------------------- *\
+   unix_time returns the Unix time stamp in microsecond.
+   (UTC time since 01/01/1970) The precision depends on the system.
+\* ------------------------------------------------------------------------- */
+
+static void (WINAPI * vGetSystemTimePreciseAsFileTime)(LPFILETIME lpSystemTimeAsFileTime);
+static HMODULE hmKernel32Dll = (HMODULE) -1;
+
+int64_t unix_time()
+{
+   int64_t iRet;
+   FILETIME CurrentTime;
+
+   if(vGetSystemTimePreciseAsFileTime)
+   {
+      vGetSystemTimePreciseAsFileTime(&CurrentTime);
+   }
+   else if(hmKernel32Dll == (HMODULE) -1)
+   { /* 1rst call */
+      hmKernel32Dll = LoadLibrary("Kernel32.dll");
+      if(hmKernel32Dll)
+         vGetSystemTimePreciseAsFileTime = (void (WINAPI * )(LPFILETIME)) GetProcAddress(hmKernel32Dll, "GetSystemTimePreciseAsFileTime");
+
+      if(vGetSystemTimePreciseAsFileTime)
+         vGetSystemTimePreciseAsFileTime(&CurrentTime);
+      else
+         GetSystemTimeAsFileTime(&CurrentTime);
+   }
+   else
+   {
+      GetSystemTimeAsFileTime(&CurrentTime);
+   }
+
+   iRet  = ((int64_t) CurrentTime.dwHighDateTime << 32);
+   iRet += (int64_t)  CurrentTime.dwLowDateTime;
+   iRet -= (int64_t)  116444736 * 1000000 * 1000; /* offset of Windows FileTime to start of Unix time */
+   return (iRet / 10);
+}/* int64_t unix_time() */
+
+#else
+
+int64_t unix_time()
+{
+   int64_t tRet;
+   struct timeval tv;
+
+   gettimeofday(&tv, NULL);
+
+   tRet = (int64_t) tv.tv_sec;
+
+   /* Try to turn the year 2038 problem into a year 2106 problem. */
+   if((sizeof(time_t) <= 4) && (tv.tv_sec < 0))
+      tRet += (int64_t) 0x80000000ul + (int64_t) 0x80000000ul;
+
+   tRet *= 1000000ul;
+   tRet += tv.tv_usec;
+   return (tRet);
+}/* int64_t unix_time() */
+#endif
+
 
 /* ========================================================================= *\
    Routines for calculating calendar week of a given date

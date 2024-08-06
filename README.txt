@@ -17,24 +17,28 @@ And there are the functions mktime_of_zone() and localtime_of_zone() as well
 which enable a thread save conversion between time_t and the times in given
 time zones and care about the daylight saving rules of those zones.
 
-Thread safety is still a little issue in the wrappers new_mktime() and
+Thread safety may be a problem in the wrappers new_mktime() and
 new_localtime_r() because the function are relying of the environment parameter
 TZ which can be adjusted at runtime. For speeding up the things a static
 pre-calculated struct is used that contains the local time-zone information.
 
 For being thread safe you need to call update_time_zone_info() before creating
-any threads. In case of changes of TZ or the local time zone afterwards
-update_time_zone_info() needs to be called again to activate the new settings.
-The update of the static information isn't yet thread save implemented.
+any threads. In case that you need changes of TZ or your local time zone during
+at random times once your process is running you need to provide an own thread
+lock and a unlock callback function to a call of init_time_api_lock().
+the functions should call a recursive mutex or in case of Windows a critical
+section internally.
 The C standard says about the *_r functions that they "shall not be subject
 to data races, unless the time or calendar state is changed in a multi-thread
-execution." If you really need that a mutex needs to be added.
+execution." You should use the provided functions of this or a similar API
+only if you need something like that in multi-threaded processes.
+
 The support of the daylight saving rules are not that funny to implement but
 new_mktime and new localtime_r should handle them right as long as the
 environment variable TZ is set or can be found and conforms the Unix standard.
 
 The default value is searched in /etc/localtime if that file exists as common
-in many Unix systems. The algorythm doesn't care the true binary format of
+in many Unix systems. The algorithm doesn't care the true binary format of
 the time zone data base files but extracts the TZ value at the end of that
 file only. This hack should work in Linux and BSD for most countries and time
 zones but the big bunch of the historical daylight saving time rules which may
@@ -75,7 +79,7 @@ the software legally only and to care about the conditions of the license.
 Please be aware that this code is despite of its very permissive license not at
 all public domain software! Except the time zones from TZ database which remain
 public domain as in the sources from https://www.iana.org/time-zones .
-But now it's time for some limitless times, don't you agree?
+But life is great and now it's time for some limitless times, don't you agree?
 
 
 Kind regards,

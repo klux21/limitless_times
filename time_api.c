@@ -1070,7 +1070,7 @@ void update_time_zone_info()
       TIME_ZONE_INFORMATION tzi;
       WCHAR * pwn = tzi.StandardName;
       CHAR *  pn  = ti.standard.zone_name;
-      size_t  count = sizeof(ti.standard.zone_name) - 1; 
+      size_t  count = sizeof(ti.standard.zone_name) - 1;
 
       memset (&ti,  0, sizeof(ti));
       memset (&tzi, 0, sizeof(tzi));
@@ -1113,7 +1113,7 @@ void update_time_zone_info()
 
       pwn   = tzi.DaylightName;
       pn    = ti.daylight.zone_name;
-      count = sizeof(ti.daylight.zone_name) - 1; 
+      count = sizeof(ti.daylight.zone_name) - 1;
 
       while(count--)
       {
@@ -1723,5 +1723,5 @@ int get_local_zone_info(TIME_ZONE_INFO * ptzi)
 } /* int get_local_zone_info(TIME_ZONE_INFO * ptzi) */
 
 /* ========================================================================= *\
-   END OF FILE
+   E N D   O F   F I L E
 \* ========================================================================= */

@@ -269,7 +269,7 @@ int test_speed()
    while (i--)
       tt = new_mkgmtime(&stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average __ new_mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average _____ new_mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
 #ifdef _WIN32
    i  = 1000000;
@@ -277,14 +277,14 @@ int test_speed()
    while (i--)
       ot = mkgmtime(&stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average ______ mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average __ common mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 #else
    i  = 1000000;
    t0 = unix_time();
    while (i--)
       ot = timegm(&stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average ________ timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average ____ common timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 #endif
 
    if (ot != tt)
@@ -301,7 +301,7 @@ int test_speed()
       tt = new_mktime(&stm);
    }
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average ____ new_mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average _______ new_mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
    t0 = unix_time();
@@ -311,7 +311,7 @@ int test_speed()
       ot = mktime(&stm);
    }
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average ________ mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average ____ common mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if (ot != tt)
    {
@@ -324,14 +324,14 @@ int test_speed()
    while (i--)
       new_gmtime_r(&tt, &stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average __ new_gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average _____ new_gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
    t0 = unix_time();
    while (i--)
       gmtime_r(&tt, &otm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average ______ gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average __ common gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if(   (otm.tm_year  != stm.tm_year)
       || (otm.tm_mon   != stm.tm_mon)
@@ -355,14 +355,14 @@ int test_speed()
    while (i--)
       new_localtime_r(&tt, &stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average new_localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average __ new_localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
    t0 = unix_time();
    while (i--)
       localtime_r(&tt, &otm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average ___ localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average common localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if(   (otm.tm_year  != stm.tm_year)
       || (otm.tm_mon   != stm.tm_mon)
@@ -796,7 +796,6 @@ int main(int argc, char * argv[])
    return(iRet);
 }/* main() */
 
-
 /* ========================================================================= *\
-   END OF FILE
+   E N D   O F   F I L E
 \* ========================================================================= */

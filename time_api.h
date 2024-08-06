@@ -285,8 +285,7 @@ struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * 
 \* ------------------------------------------------------------------------- */
 int get_local_zone_info(TIME_ZONE_INFO * ptzi);
 
-
-/* ========================================================================= *\
+/* ------------------------------------------------------------------------- *\
    Optional thread lock stuff for ensuring thread safety in multi-threaded
    programs. The lock callbacks must be set before calling
    update_time_zone_info, new_mktime, get_local_zone_info or new_localtime_r.
@@ -307,7 +306,7 @@ int get_local_zone_info(TIME_ZONE_INFO * ptzi);
    functions aren't required to be thread safe implemented while changing the
    global time settings e.g. if changing the TZ environment variable of your
    process!
-\* ========================================================================= */
+\* ------------------------------------------------------------------------- */
 typedef void (* TIME_API_LOCK) (void * context);  /* the mutes lock or unlock callback function prototype */
 
 void init_time_api_lock(TIME_API_LOCK pfn_lock,    /* pointer to a user provided mutex lock callback function */
@@ -321,5 +320,5 @@ void init_time_api_lock(TIME_API_LOCK pfn_lock,    /* pointer to a user provided
 #endif /* TIME_API_H */
 
 /* ========================================================================= *\
-   END OF FILE
+   E N D   O F   F I L E
 \* ========================================================================= */

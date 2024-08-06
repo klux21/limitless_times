@@ -286,6 +286,34 @@ struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * 
 int get_local_zone_info(TIME_ZONE_INFO * ptzi);
 
 
+/* ========================================================================= *\
+   Optional thread lock stuff for ensuring thread safety in multi-threaded
+   programs. The lock callbacks must be set before calling
+   update_time_zone_info, new_mktime, get_local_zone_info or new_localtime_r.
+   The context is a user defined pointer which is uses as argument of the
+   callbacks. It can be a pointer to a global program mutex for instance.
+   The provided pfn_lock and pfn_unlock functions are called for guarding
+   the updates of the internal time zone information updates in
+   multi-threaded programs but may slow down those functions according to the
+   time the lock or unlock functions require. For disabling subsequent calls
+   of the lock and unlock function e.g. before the program termination call
+   set_time_api_lock with null pointer arguments instead of callback functions.
+   The used mutex needs to be callable recursively.
+   Because the function pointers are remembered in static variables you need
+   to ensure to call this function in all of your program modules which don't
+   share the same statics and ensure the usage of the same mutex in all of
+   those modules.
+   Be aware that the other standard C time functions beside of those
+   functions aren't required to be thread safe implemented while changing the
+   global time settings e.g. if changing the TZ environment variable of your
+   process!
+\* ========================================================================= */
+typedef void (* TIME_API_LOCK) (void * context);  /* the mutes lock or unlock callback function prototype */
+
+void set_time_api_lock(TIME_API_LOCK pfn_lock,    /* pointer to a user provided mutex lock callback function */
+                       TIME_API_LOCK pfn_unlock,  /* pointer to a user provided mutex unlock callback function */
+                       void *        pv_context); /* user provided context, e.g. pointer to the mutex. */
+
 #ifdef __cplusplus
 }/* extern "C" */
 #endif

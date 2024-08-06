@@ -160,6 +160,65 @@ int64_t unix_time()
 
 
 /* ========================================================================= *\
+   Thread safety helpers
+\* ========================================================================= */
+
+/* ------------------------------------------------------------------------- *\
+   Optional thread lock stuff for ensuring thread safety in multi-threaded
+   programs. The lock callbacks must be set before calling
+   update_time_zone_info, new_mktime, get_local_zone_info or new_localtime_r.
+   The context is a user defined pointer which is uses as argument of the
+   callbacks. It can be a pointer to a global program mutex for instance.
+   The provided pfn_lock and pfn_unlock functions are called for guarding
+   the updates of the internal time zone information updates in
+   multi-threaded programs but may slow down those functions according to the
+   time the lock or unlock functions require. For disabling subsequent calls
+   of the lock and unlock function e.g. before the program termination call
+   set_time_api_lock with null pointer arguments instead of callback functions.
+   The used mutex needs to be callable recursively.
+   Because the function pointers are remembered in static variables you need
+   to ensure to call this function in all of your program modules which don't
+   share the same statics and ensure the usage of the same mutex in all of
+   those modules.
+   Be aware that the other standard C time functions beside of those
+   functions aren't required to be thread safe implemented while changing the
+   global time settings e.g. if changing the TZ environment variable of your
+   process!
+\* ------------------------------------------------------------------------- */
+
+static TIME_API_LOCK pta_lock         = NULL;
+static TIME_API_LOCK pta_unlock       = NULL;
+static void *        pv_lock_context = NULL;
+
+void init_time_api_lock(TIME_API_LOCK pfn_lock,   /* pointer to a user provided mutex lock callback function */
+                        TIME_API_LOCK pfn_unlock, /* pointer to a user provided mutex unlock callback function */
+                        void *        pv_context) /* user provided context, e.g. pointer to the mutex. */
+{
+   TIME_API_LOCK old_unlock;
+   void *        old_context;
+
+   if(pfn_lock)
+      pfn_lock(pv_context);
+
+   if(pta_lock)
+      pta_lock(pv_lock_context);
+
+   old_context     = pv_lock_context;
+   old_unlock      = pta_unlock;
+
+   pv_lock_context = pv_context;
+   pta_lock        = pfn_lock;
+   pta_unlock      = pfn_unlock;
+
+   if(old_unlock)
+      old_unlock(old_context);
+
+   if(pfn_unlock)
+      pfn_unlock(pv_context);
+} /* void set_time_api_lock(...) */
+
+
+/* ========================================================================= *\
    Routines for calculating calendar week of a given date
 \* ========================================================================= */
 
@@ -916,6 +975,9 @@ void update_time_zone_info()
    char * pTZ = getenv("TZ");
    struct stat st;
 
+   if(pta_lock)
+      pta_lock(pv_lock_context);
+
    if(!pTZ)
    {
       tzset(); /* mktime should call that. */
@@ -1072,6 +1134,9 @@ void update_time_zone_info()
 #endif /* _WIN32 */
 
    Exit:;
+
+   if(pta_unlock)
+      pta_unlock(pv_lock_context);
 } /* void update_time_zone_info() */
 
 
@@ -1341,9 +1406,20 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 \* ------------------------------------------------------------------------- */
 time_t new_mktime(const struct tm * ptm)
 {
+   time_t t_ret;
+
+   if(pta_lock)
+      pta_lock(pv_lock_context);
+
    if(!ti.type)
       update_time_zone_info();
-   return(mktime_of_zone(ptm, &ti));
+
+   t_ret = mktime_of_zone(ptm, &ti);
+
+   if(pta_unlock)
+      pta_unlock(pv_lock_context);
+
+   return(t_ret);
 } /* time_t new_mktime(struct tm * ptm) */
 
 
@@ -1600,10 +1676,20 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 \* ------------------------------------------------------------------------- */
 struct tm * new_localtime_r(const time_t * pt, struct tm * ptm)
 {
+   struct tm * ptm_ret;
+
+   if(pta_lock)
+      pta_lock(pv_lock_context);
+
    if(!ti.type)
       update_time_zone_info();
 
-   return localtime_of_zone(pt ? *pt : 0, ptm, &ti);
+   ptm_ret = localtime_of_zone(pt ? *pt : 0, ptm, &ti);
+
+   if(pta_unlock)
+      pta_unlock(pv_lock_context);
+
+   return (ptm_ret);
 } /* struct tm * new_localtime_r(const time_t * pt, struct tm * ptm) */
 
 
@@ -1619,17 +1705,22 @@ int get_local_zone_info(TIME_ZONE_INFO * ptzi)
    if(!ptzi)
        goto Exit;
 
+   if(pta_lock)
+      pta_lock(pv_lock_context);
+
    if(!ti.type)
       update_time_zone_info();
 
    *ptzi = ti;
+
+   if(pta_unlock)
+      pta_unlock(pv_lock_context);
 
    iret = 1;
    Exit:;
 
    return (iret);
 } /* int get_local_zone_info(TIME_ZONE_INFO * ptzi) */
-
 
 /* ========================================================================= *\
    END OF FILE

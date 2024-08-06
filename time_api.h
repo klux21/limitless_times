@@ -310,9 +310,9 @@ int get_local_zone_info(TIME_ZONE_INFO * ptzi);
 \* ========================================================================= */
 typedef void (* TIME_API_LOCK) (void * context);  /* the mutes lock or unlock callback function prototype */
 
-void set_time_api_lock(TIME_API_LOCK pfn_lock,    /* pointer to a user provided mutex lock callback function */
-                       TIME_API_LOCK pfn_unlock,  /* pointer to a user provided mutex unlock callback function */
-                       void *        pv_context); /* user provided context, e.g. pointer to the mutex. */
+void init_time_api_lock(TIME_API_LOCK pfn_lock,    /* pointer to a user provided mutex lock callback function */
+                        TIME_API_LOCK pfn_unlock,  /* pointer to a user provided mutex unlock callback function */
+                        void *        pv_context); /* user provided context, e.g. pointer to the mutex. */
 
 #ifdef __cplusplus
 }/* extern "C" */

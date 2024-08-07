@@ -307,11 +307,11 @@ int get_local_zone_info(TIME_ZONE_INFO * ptzi);
    global time settings e.g. if changing the TZ environment variable of your
    process!
 \* ------------------------------------------------------------------------- */
-typedef void (* TIME_API_LOCK) (void * context);  /* the mutes lock or unlock callback function prototype */
+typedef void (* TIME_API_LOCK) (void * pv_context); /* the mutes lock or unlock callback function prototype */
 
-void init_time_api_lock(TIME_API_LOCK pfn_lock,    /* pointer to a user provided mutex lock callback function */
-                        TIME_API_LOCK pfn_unlock,  /* pointer to a user provided mutex unlock callback function */
-                        void *        pv_context); /* user provided context, e.g. pointer to the mutex. */
+void init_time_api_lock(TIME_API_LOCK pfn_lock,     /* pointer to a user provided mutex lock callback function */
+                        TIME_API_LOCK pfn_unlock,   /* pointer to a user provided mutex unlock callback function */
+                        void *        pv_context);  /* user provided context, e.g. pointer to the mutex. */
 
 #ifdef __cplusplus
 }/* extern "C" */

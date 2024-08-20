@@ -19,14 +19,13 @@ and can handle the daylight saving rules of the different zones. For speeding
 the calculations up a static pre-calculated struct can be used that contains
 the local time-zone information.
 
-Thread safety may be a problem in mktime() and localtime_r() because the
-functions rely of the environment parameter TZ which can be adjusted at runtime.
-For speeding the things up a static pre-calculated struct can be used now that
-contains the local time-zone information. The C standard says about the *_r
+Thread safety may be a problem regarding the standard C functions mktime() and
+localtime_r() because those functions rely on the environment parameter TZ
+which can be required to change at runtime. The C standard says about the *_r
 time functions that they "shall not be subject to data races, unless the time
 or calendar state is changed in a multi-thread execution." That's why it's
 dangerous to use those functions in big multi-threaded and portable software
-projects if time zone adjustments at runtime may happen. 
+projects if any time zone adjustments at runtime need to be handled.
 
 For being thread safe you need just call update_time_zone_info() before
 creating any threads. In case that you need changes of TZ or your local time

@@ -525,7 +525,7 @@ TZ_VALUE timezones[] = {
       {"Japan", "JST-9" },
       {"Kwajalein", "<+12>-12" },
       {"Libya", "EET-2" },
-      {"MET", "MET-1MEST,M3.5.0,M10.5.0/3" },
+      {"MET", "CET-1CEST,M3.5.0,M10.5.0/3" },
       {"Mexico/BajaNorte", "PST8PDT,M3.2.0,M11.1.0" },
       {"Mexico/BajaSur", "MST7" },
       {"Mexico/General", "CST6" },

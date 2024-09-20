@@ -77,7 +77,7 @@ something like the GPL. It's for sure a good idea to use the software legally
 only and to care about the conditions of the license. Please be aware that this
 code is despite of its very permissive license no public domain software!
 ( Except the list of time zones from TZ database which remain public domain as
-in the IANA time-zone database version 2024a https://www.iana.org/time-zones )
+in the IANA time-zone database version 2024b https://www.iana.org/time-zones )
 
 Life is great once there are less limits and problems and for this it's about
 time for limitless times now.

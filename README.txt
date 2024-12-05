@@ -1,31 +1,33 @@
-limitless_times - time handling functions which overcome some annoying limits
+limitless_times - time handling functions to overcome some annoying limits
 
-It did bother me since a while that the common time functions in C are not only
-quite slow usually but that it's not even possible to use them for any dates
-and times before 1970. It's because the implementations of those functions are
-usually unable to handle any negative time_t values.
-even worse there exist that nightmare of handling the daylight saving rules and
-times in the different times zones. It's not hard to do of course as long as
-you know the time offset and daylight saving rules. And if it comes to myself I
-did want some fast and reliable portable functions for my own applications and
-especially network logging of those in all the systems all over the world.
+It did bother me since a while that the common time functions in C are not
+only slow usually but that the common implementations don't even support any
+dates and times before 1970 because they are usually unable to handle negative
+time_t values. Even worse there exist that nightmare of the daylight saving
+rules all over the world and a thread save conversion between the the times of
+different time zones is a pretty hard thing to do. The math itself is not that
+hard of course as long as you know the time offsets and the daylight saving
+rules. If it comes to myself I did just want some fast, reliable and portable
+functions for my applications and especially for my network loggings in the
+several systems all over the world.
 
-The wrappers for gmtime_r, mkgmtime, mktime and localtime_r here can handle
-Gregorian time even back to the age of dinosaur and also the same time span
-ahead in the future. Additionally there there are the functions
+The wrappers for gmtime_r, mkgmtime, mktime and localtime_r here are able to
+handle the Gregorian time even back to the age of dinosaur and the same time
+span ahead in the future too. Additionally there there are the functions
 mktime_of_zone() and localtime_of_zone() now which provide a thread save
 conversion between the UTC time of a time_t and the times in given time zones
-and can handle the daylight saving rules of the different zones. For speeding
-the calculations up a static pre-calculated struct can be used that contains
-the local time-zone information.
+and are able to handle the daylight saving rules of the different zones.
+For speeding the calculations up a pre-calculated concersion data can be used
+that contains the required time-zone information.
 
 Thread safety may be a problem regarding the standard C functions mktime() and
 localtime_r() because those functions rely on the environment parameter TZ
-which can be required to change at runtime. The C standard says about the *_r
-time functions that they "shall not be subject to data races, unless the time
-or calendar state is changed in a multi-thread execution." That's why it's
-dangerous to use those functions in big multi-threaded and portable software
-projects if any time zone adjustments at runtime need to be handled.
+which can be required to change at runtime once the time zone is changes.
+The C standard says about the *_r time functions that they "shall not be
+subject to data races, unless the time or calendar state is changed in a
+multi-thread execution." That's why it's pretty dangerous to use those
+functions in big multi-threaded and portable software projects if any time
+zone adjustments or convertions at runtime need to be handled.
 
 For being thread safe you need just call update_time_zone_info() before
 creating any threads. In case that you need changes of TZ or your local time
@@ -33,9 +35,9 @@ zone during at random times once your process is running you may provide an
 own mutex lock and unlock function for init_time_api_lock() and rely on the
 functions provided by this API.
 
-The support of the daylight saving rules are not that funny to implement but
-new_mktime and new localtime_r should handle them right as long as the
-environment variable TZ is set and conforms the Unix standard.
+The support of the daylight saving rules is not that funny to implement but
+the functions new_mktime and new localtime_r here should handle them right as
+long as the environment variable TZ is set correctly.
 
 The default value is searched in /etc/localtime if that file exists as common
 in many Unix systems. The algorithm doesn't care the true binary format of

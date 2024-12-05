@@ -71,15 +71,15 @@ prohibits any usage for weapons, spyware and systems for a secret monitoring of
 people without their knowledge and prior agreement.
 I dislike the idea to find anything of my software in military devices, weapons
 or spyware because it's traceably in the binaries of the most recently
-available compilers. The license ist not a big deal for most people except for
+available compilers. The license is not a big deal for most people except for
 the ones who make money out of wars and things that are usually a nasty stuff.
 I don't expect anything good in return of supporting those people with this.
 But the license is much more permissive if it comes to a commercial usage than
 something like the GPL. It's for sure a good idea to use the software legally
 only and to care about the conditions of the license. Please be aware that this
-code is despite of its very permissive license no public domain software!
-( Except the list of time zones from TZ database which remain public domain as
-in the IANA time-zone database version 2024b https://www.iana.org/time-zones )
+code is despite of the very permissive license no public domain software!
+( Except the list of time zones that remains public domain as in the IANA
+time-zone database version 2024b https://www.iana.org/time-zones )
 
 Life is great once there are less limits and problems and for this it's about
 time for limitless times now.

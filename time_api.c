@@ -594,10 +594,12 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
       leap_year = 1;
    }
 
-   ptm->tm_year = (int) (year - 1900);
+   year -=  1900;
+
+   ptm->tm_year = (int) year;
    ptm->tm_yday = (int) day;
 
-   if(!leap_year && (day >= 59))
+   if (!leap_year && (day >= 59))
       ++day; /* we have to skip the 29th of February in our tables */
 
    ptm->tm_mon  = mon[day];
@@ -606,6 +608,17 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    ptm->tm_hour = (time_of_day / 3600);
    ptm->tm_min  = (time_of_day % (3600)) / 60;
    ptm->tm_sec  = (time_of_day % (60));
+
+   if (year != (int) year)
+   {
+#ifdef EOVERFLOW
+      errno = EOVERFLOW;
+#else
+      errno = ERANGE;
+#endif
+      ptm = NULL;
+      goto Exit;
+   }
 
 Exit:;
    return (ptm);
@@ -1653,8 +1666,9 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 
    if(ptm)
    {
-      new_gmtime_r(&utc_time, ptm);
+      struct tm * ptm_ret = new_gmtime_r(&utc_time, ptm);
       ptm->tm_isdst = isDaylightSaving; /* set summer time flag */
+      ptm = ptm_ret;
    }
 
    return (ptm);

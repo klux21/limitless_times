@@ -81,7 +81,7 @@ TZ_VALUE timezones[] = {
       {"America/Argentina/Tucuman", "<-03>3" },
       {"America/Argentina/Ushuaia", "<-03>3" },
       {"America/Aruba", "AST4" },
-      {"America/Asuncion", "<-04>4<-03>,M10.1.0/0,M3.4.0/0" },
+      {"America/Asuncion", "<-03>3" },
       {"America/Atikokan", "EST5" },
       {"America/Atka", "HST10HDT,M3.2.0,M11.1.0" },
       {"America/Bahia", "<-03>3" },

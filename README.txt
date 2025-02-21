@@ -53,7 +53,7 @@ deviation from an average tropical year either and leap seconds can't fix the
 problems that the GPS and other systems face either.
 The Unix standard says that "As represented in seconds since the Epoch, each
 and every day shall be accounted for by exactly 86400 seconds."
-( https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15 )
+( https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_16 )
 For this leap seconds are usually ignored and I guess it's pretty OK to do
 so as well. A Gregorian year lasts currently a bit longer than a tropical year
 either and in a few ten thousend years after the earth rotation has slowed down

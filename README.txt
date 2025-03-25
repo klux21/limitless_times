@@ -17,12 +17,13 @@ span ahead in the future too. Additionally there there are the functions
 mktime_of_zone() and localtime_of_zone() now which provide a thread save
 conversion between the UTC time of a time_t and the times in given time zones
 and are able to handle the daylight saving rules of the different zones.
-For speeding the calculations up a pre-calculated concersion data can be used
+For speeding up the calculations a pre-calculated conversion data can be used
 that contains the required time-zone information.
 
 Thread safety may be a problem regarding the standard C functions mktime() and
 localtime_r() because those functions rely on the environment parameter TZ
-which can be required to change at runtime once the time zone is changes.
+which can be required to change at runtime once the time zone is changed.
+This can also be a problem in big software project with countless components.
 The C standard says about the *_r time functions that they "shall not be
 subject to data races, unless the time or calendar state is changed in a
 multi-thread execution." That's why it's pretty dangerous to use those

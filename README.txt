@@ -80,7 +80,7 @@ something like the GPL. It's for sure a good idea to use the software legally
 only and to care about the conditions of the license. Please be aware that this
 code is despite of the very permissive license no public domain software!
 ( Except the list of time zones that remains public domain as in the IANA
-time-zone database version 2025a https://www.iana.org/time-zones )
+time-zone database version 2025b https://www.iana.org/time-zones )
 
 Life is great once there are less limits and problems and for this it's about
 time for limitless times now.

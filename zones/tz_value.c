@@ -107,6 +107,7 @@ TZ_VALUE timezones[] = {
       {"America/Coral_Harbour", "EST5" },
       {"America/Cordoba", "<-03>3" },
       {"America/Costa_Rica", "CST6" },
+      {"America/Coyhaique", "<-03>3" },
       {"America/Creston", "MST7" },
       {"America/Cuiaba", "<-04>4" },
       {"America/Curacao", "AST4" },

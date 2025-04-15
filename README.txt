@@ -64,7 +64,7 @@ problem of a nitpicker if somebody has a problem with that.
 For testing the functions and comparing the speed with the compiler build-in
 functions you may execute the test_times.c right as a shell script in a Linux
 or BSD system of your choice where a C compiler exist.
-There is a little test solution for Visual Studio as well now here.
+There is a little test solution for Visual Studio as well here now.
 
 Why that 'Civil Usage Public License'? The license is kind of a little mix of
 the conditions of BSD or Apache license but in opposite to the former it
@@ -86,4 +86,5 @@ Life is great once there are less limits and problems and for this it's about
 time for limitless times now.
 
 Kind regards,
+
 Klaus Lux

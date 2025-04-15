@@ -247,7 +247,7 @@ struct TIME_ZONE_INFO_S
    read_TZ parses a Unix conform TZ evironment variable conform string for
    the time zone rules and stores this rules in success case in a struct
    TIME_ZONE_INFO. The function returns nonzero in success case only.
-   If the function fails because of an invalid string then the strage that
+   If the function fails because of an invalid string then the storage that
    ptzi points to is unchanged.
 \* ------------------------------------------------------------------------- */
 int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);

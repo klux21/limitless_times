@@ -606,8 +606,9 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    ptm->tm_mday = mday[day];
 
    ptm->tm_hour = (time_of_day / 3600);
-   ptm->tm_min  = (time_of_day % (3600)) / 60;
-   ptm->tm_sec  = (time_of_day % (60));
+   time_of_day %= 3600;
+   ptm->tm_min  = time_of_day / 60;
+   ptm->tm_sec  = time_of_day % 60;
 
    if (year != (int) year)
    {

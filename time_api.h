@@ -197,6 +197,10 @@ time_t new_mktime(const struct tm * ptm);
    printf ( "The historical year was %s%i%s", ptm->year > -1900 ? "AD" : "",
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
+
+   In Posix 2024 systems ptm->tm_zone points to storage in a static
+   TIME_ZONE_INFO struct. It may change once TZ becomes adjusted after the
+   call of new_localtime_r.
 \* ------------------------------------------------------------------------- */
 struct tm * new_localtime_r(const time_t * pt, struct tm * ptm);
 
@@ -274,6 +278,9 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi);
    printf ( "The historical year was %s%i%s", ptm->year > -1900 ? "AD" : "",
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
+
+   In Posix 2024 systems ptm->tm_zone points to storage in the TIME_ZONE_INFO
+   struct. It becomes invalid once the storage of ptzi is released or adjusted.
 \* ------------------------------------------------------------------------- */
 struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi);
 

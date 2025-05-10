@@ -333,6 +333,16 @@ int test_speed()
    t1 = unix_time() - t0;
    fprintf(stdout, "An average __ common gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
+#if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
+   if ((otm.tm_gmtoff != stm.tm_gmtoff) ||
+        (strcmp(otm.tm_zone, stm.tm_zone) && strcmp(otm.tm_zone, "GMT")))
+   {
+      fprintf (stderr, "Return values of gmtime_r() and new_gmtime_r() differ! \n"
+                       "gmtoff=%ld zone='%s' != gmtoff=%ld zone='%s'\n",
+                        (long) otm.tm_gmtoff, otm.tm_zone, (long) stm.tm_gmtoff, stm.tm_zone);
+   }
+#endif
+
    if(   (otm.tm_year  != stm.tm_year)
       || (otm.tm_mon   != stm.tm_mon)
       || (otm.tm_mday  != stm.tm_mday)
@@ -344,9 +354,9 @@ int test_speed()
       || (otm.tm_yday  != stm.tm_yday))
    {
       fprintf (stderr, "Return values of gmtime_r() and new_gmtime_r() differ! \n"
-                       "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                       "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) !=  %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
                         otm.tm_year + 1900, otm.tm_mon+1, otm.tm_mday, otm.tm_hour, otm.tm_min, otm.tm_sec, otm.tm_yday, otm.tm_isdst, otm.tm_wday,
-                        stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday );
+                        stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, stm.tm_yday, stm.tm_isdst, stm.tm_wday);
       goto Exit;
    }
 
@@ -363,6 +373,15 @@ int test_speed()
       localtime_r(&tt, &otm);
    t1 = unix_time() - t0;
    fprintf(stdout, "An average common localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+
+#if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
+   if ((otm.tm_gmtoff != stm.tm_gmtoff) || strcmp(otm.tm_zone, stm.tm_zone))
+   {
+      fprintf (stderr, "Return values of gmtime_r() and new_gmtime_r() differ! \n"
+                       "gmtoff=%ld zone='%s' != gmtoff=%ld zone='%s'\n",
+                        (long) otm.tm_gmtoff, otm.tm_zone, (long) stm.tm_gmtoff, stm.tm_zone);
+   }
+#endif
 
    if(   (otm.tm_year  != stm.tm_year)
       || (otm.tm_mon   != stm.tm_mon)
@@ -767,6 +786,22 @@ int main(int argc, char * argv[])
 
    if(!test_conversions())
       goto Exit;
+
+#if 0
+   pTZ = "XET-2XEST,M3.4.4/122,M10.4.4/122";
+
+   setenv("TZ", pTZ, 1);
+
+   tzset();
+   update_time_zone_info();
+
+   if(!test_speed())
+      goto Exit;
+
+   if(!test_conversions())
+      goto Exit;
+#endif
+
 
 #ifndef _WIN32
    setenv("TZ", "UTC0", 1);

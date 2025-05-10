@@ -610,6 +610,11 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    ptm->tm_min  = time_of_day / 60;
    ptm->tm_sec  = time_of_day % 60;
 
+#if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
+   ptm->tm_gmtoff = 0;
+   ptm->tm_zone   = "UTC";
+#endif
+
    if (year != (int) year)
    {
 #ifdef EOVERFLOW
@@ -1454,10 +1459,14 @@ time_t new_mktime(const struct tm * ptm)
    printf ( "The historical year was %s%i%s", ptm->year > -1900 ? "AD" : "",
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
+
+   In Posix 2024 systems ptm->tm_zone points to storage in the TIME_ZONE_INFO
+   struct. It becomes invalid once the storage of ptzi is released or adjusted.
 \* ------------------------------------------------------------------------- */
 struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
-   int     isDaylightSaving = 0;
+   const TIME_ZONE_RULE * ptzr;
+   int   isDaylightSaving = 0;
 
    if (ptzi->type > 1)
    {
@@ -1642,11 +1651,11 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       {  /* southern hemisphere */
          if((time_of_year >= standard_start) && (time_of_year < daylight_start))
          {
-            utc_time -= ptzi->standard.bias;
+            ptzr = &ptzi->standard;
          }
          else
          {
-            utc_time -= ptzi->daylight.bias;
+            ptzr = &ptzi->daylight;
             isDaylightSaving = 1;
          }
       }
@@ -1654,24 +1663,32 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       {  /* northern hemisphere */
          if((time_of_year >= daylight_start) && (time_of_year < standard_start))
          {
-            utc_time -= ptzi->daylight.bias;
+            ptzr = &ptzi->daylight;
             isDaylightSaving = 1;
          }
          else
          {
-            utc_time -= ptzi->standard.bias;
+            ptzr = &ptzi->standard;
          }
       }
    }
    else
    {
-      utc_time -= ptzi->standard.bias;
+      ptzr = &ptzi->standard;
    }
+
+   utc_time -= ptzr->bias;
 
    if(ptm)
    {
       struct tm * ptm_ret = new_gmtime_r(&utc_time, ptm);
       ptm->tm_isdst = isDaylightSaving; /* set summer time flag */
+
+#if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
+      ptm->tm_gmtoff = -ptzr->bias;
+      ptm->tm_zone   = ptzr->zone_name;
+#endif
+
       ptm = ptm_ret;
    }
 
@@ -1691,6 +1708,10 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
    printf ( "The historical year was %s%i%s", ptm->year > -1900 ? "AD" : "",
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
+
+   In Posix 2024 systems ptm->tm_zone points to storage in a static
+   TIME_ZONE_INFO struct. It may change once TZ becomes adjusted after the
+   call of new_localtime_r.
 \* ------------------------------------------------------------------------- */
 struct tm * new_localtime_r(const time_t * pt, struct tm * ptm)
 {

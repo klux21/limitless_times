@@ -863,7 +863,10 @@ static int read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
       if ((*ps >= '0') && (*ps <= '9'))
          hour = (hour * 10) + (*ps++ - '0');
 
-      if(hour > 75)
+      if ((*ps >= '0') && (*ps <= '9'))
+         hour = (hour * 10) + (*ps++ - '0');
+
+      if(hour > 167)
          goto Exit;
 
       if(*ps == ':')

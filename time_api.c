@@ -1345,9 +1345,9 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
 
-         while((--week_of_month) && (switchday < month))
+         while((--week_of_month) && (switchday < days_of_month))
             switchday += 7;
 
          daylight_start = startday_of_month + switchday; /* start day of daylight saving within the year */
@@ -1391,9 +1391,9 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
 
-         while((--week_of_month) && (switchday < month))
+         while((--week_of_month) && (switchday < days_of_month))
             switchday += 7;
 
          standard_start = startday_of_month + switchday; /* start day of standard time within the year */
@@ -1482,15 +1482,13 @@ time_t new_mktime(const struct tm * ptm)
 \* ------------------------------------------------------------------------- */
 struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
-   const TIME_ZONE_RULE * ptzr;
+   const TIME_ZONE_RULE * ptz;
    int   isDaylightSaving = 0;
 
    if (ptzi->type > 1)
    {
       int32_t daylight_start; /* begin of day light saving in seconds after begin of the year */
       int32_t standard_start; /* begin of standard time in seconds after begin of the year */
-
-      const TIME_ZONE_RULE * ptz;
       int32_t month; /* index of the month */
       int32_t startday_of_month;
       int32_t wday_month_start;
@@ -1498,8 +1496,6 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       int32_t switchday;
       int32_t time_of_day;
       int32_t days_of_month;
-
-      uint32_t tmp;
       uint32_t day;
       int32_t  time_of_year;
       int32_t  wday_year_start;
@@ -1514,31 +1510,24 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
          year = time / ((int64_t) 146097 * 86400); /* calculate the 400 year epoche before that time */
 
       time -= year * ((int64_t) 146097 * 86400); /* time is between 0 an 400 AD now */
-      year *= 400; /* number of years */
       day  = (uint32_t) (time / 86400); /* number of days within the 400 year epoch */
       time_of_day = (int32_t) (time - ((int64_t) day * 86400));
 
       if (day >= 36526)
       {  /* the time is more than 100 years after a full 400 year epoch */
          day -= 36526;
-         year += 100;
 
          if (day >= 36525)
          {
             day -= 36525;
-            year += 100;
 
             if (day >= 36525)
-            {
                day -= 36525;
-               year += 100;
-            }
          }
 
          /* handle the first non leap years at begin of the century and ensure all remaining 4 year epochs start with a leap year */
          if (day >= 1460)
          {
-            year += 4;
             day -= 1460;
          }
          else
@@ -1546,33 +1535,24 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
             leap_year = 0; /* we have to ignore the leap year within the first four years of a century */
 
             while (day >= 365)
-            {
-               ++year;
                day -= 365;
-            }
          }
       }
 
-      /* now we handle the rest of the years */
-      tmp = (day / 1461);  /* calculate the number of full 4 year epochs that start with a leap year */
-      year += tmp * 4;
-      day  -= tmp * 1461;
+      day %= 1461; /* days within 4 year epochs that start with a leap year */
 
       if (day >= 1096)
       { /* last year of the remaining 4 year block */
-         year += 3;
          day -= 1096;
          leap_year = 0;
       }
       else if (day >= 731)
       { /* 3rd year of the 4 year block */
-         year += 2;
          day -= 731;
          leap_year = 0;
       }
       else if (day >= 366)
-      { /* 2n year of the 4 year block */
-         year += 1;
+      { /* 2nd year of the 4 year block */
          day -= 366;
          leap_year = 0;
       }
@@ -1620,9 +1600,9 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
 
-         while((--week_of_month) && (switchday < month))
+         while((--week_of_month) && (switchday < days_of_month))
             switchday += 7;
 
          daylight_start = startday_of_month + switchday; /* start day of daylight saving within the year */
@@ -1666,9 +1646,9 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
 
-         while((--week_of_month) && (switchday < month))
+         while((--week_of_month) && (switchday < days_of_month))
             switchday += 7;
 
          standard_start = startday_of_month + switchday; /* start day of standard time within the year */
@@ -1681,11 +1661,11 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       {  /* southern hemisphere */
          if((time_of_year >= standard_start) && (time_of_year < daylight_start))
          {
-            ptzr = &ptzi->standard;
+            ptz = &ptzi->standard;
          }
          else
          {
-            ptzr = &ptzi->daylight;
+            ptz = &ptzi->daylight;
             isDaylightSaving = 1;
          }
       }
@@ -1693,21 +1673,21 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       {  /* northern hemisphere */
          if((time_of_year >= daylight_start) && (time_of_year < standard_start))
          {
-            ptzr = &ptzi->daylight;
+            ptz = &ptzi->daylight;
             isDaylightSaving = 1;
          }
          else
          {
-            ptzr = &ptzi->standard;
+            ptz = &ptzi->standard;
          }
       }
    }
    else
    {
-      ptzr = &ptzi->standard;
+      ptz = &ptzi->standard;
    }
 
-   utc_time -= ptzr->bias;
+   utc_time -= ptz->bias;
 
    if(ptm)
    {
@@ -1715,8 +1695,8 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       ptm->tm_isdst = isDaylightSaving; /* set summer time flag */
 
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
-      ptm->tm_gmtoff = -ptzr->bias;
-      ptm->tm_zone   = ptzr->zone_name;
+      ptm->tm_gmtoff = -ptz->bias;
+      ptm->tm_zone   = ptz->zone_name;
 #endif
 
       ptm = ptm_ret;

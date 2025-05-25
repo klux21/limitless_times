@@ -1177,7 +1177,7 @@ void update_time_zone_info()
    get_rule_time is a helper function that calculates the time in seconds
    that a given daylight saving rule applies after the begin of the year.
    Beside of specific time zone rule it needs the information whether that
-   year is a leap year and which day of the week that year begins.   
+   year is a leap year and which day of the week that year begins.
 \* ------------------------------------------------------------------------- */
 
 static int32_t get_rule_time(const TIME_ZONE_RULE * ptz, int leap_year, int wday_year_start)

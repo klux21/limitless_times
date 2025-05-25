@@ -378,7 +378,7 @@ int test_speed()
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
    if ((otm.tm_gmtoff != stm.tm_gmtoff) || strcmp(otm.tm_zone, stm.tm_zone))
    {
-      fprintf (stderr, "Return values of gmtime_r() and new_gmtime_r() differ! \n"
+      fprintf (stderr, "Return values of localtime_r() and new_localtime_r() differ! \n"
                        "gmtoff=%ld zone='%s' != gmtoff=%ld zone='%s'\n",
                         (long) otm.tm_gmtoff, otm.tm_zone, (long) stm.tm_gmtoff, stm.tm_zone);
    }
@@ -931,6 +931,7 @@ int main(int argc, char * argv[])
 
 #if 0
    pTZ = "XET-2XEST,M3.4.4/122,M10.4.4/122";
+   pTZ = "<-04>4<-03>,M9.1.6/24,M4.1.6/24";
 
    setenv("TZ", pTZ, 1);
 

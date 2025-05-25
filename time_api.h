@@ -235,7 +235,7 @@ struct TIME_ZONE_RULE_S
    int32_t wday;     /* day of the week the rule applies starting with 0 = Sunday */
    int32_t time;     /* local time of the day this time rule applies in seconds */
 
-   char    zone_name[72]; /* name of that time zone as usually given in TZ environment variable */
+   char    zone_name[72]; /* name of the time zone as usually specified in TZ environment variable */
 };
 
 typedef struct TIME_ZONE_INFO_S TIME_ZONE_INFO;
@@ -309,12 +309,12 @@ int get_local_zone_info(TIME_ZONE_INFO * ptzi);
    to ensure to call this function in all of your program modules which don't
    share the same statics and ensure the usage of the same mutex in all of
    those modules.
-   Be aware that the other standard C time functions beside of those
-   functions aren't required to be thread safe implemented while changing the
-   global time settings e.g. if changing the TZ environment variable of your
+   Be aware that standard C time functions as provided by a compiler aren't
+   required to be thread safe implemented during changes of the global time
+   settings e.g. if there are changes of the TZ environment variable of your
    process!
 \* ------------------------------------------------------------------------- */
-typedef void (* TIME_API_LOCK) (void * pv_context); /* the mutes lock or unlock callback function prototype */
+typedef void (* TIME_API_LOCK) (void * pv_context); /* the mutex lock or unlock callback function prototype */
 
 void init_time_api_lock(TIME_API_LOCK pfn_lock,     /* pointer to a user provided mutex lock callback function */
                         TIME_API_LOCK pfn_unlock,   /* pointer to a user provided mutex unlock callback function */

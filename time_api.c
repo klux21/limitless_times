@@ -1174,6 +1174,63 @@ void update_time_zone_info()
 
 
 /* ------------------------------------------------------------------------- *\
+  get_rule_time calculates the time in seconds a given daylight saving rule
+  applies after the begin of the year
+\* ------------------------------------------------------------------------- */
+static int32_t get_rule_time(const TIME_ZONE_RULE * ptz, int leap_year, int wday_year_start)
+{
+   int32_t switchday; /* day after begin of the year when the rule applies */
+
+   if (ptz->mode > 0)
+   {
+      switchday = ptz->year_day;
+
+      if ((ptz->mode == 1) && leap_year && (switchday >= 59))
+         ++switchday; /* we have to ignore the 29th of February */
+   }
+   else
+   {
+      int32_t days_of_month;
+      int32_t startday_of_month;
+      int32_t wday_month_start;
+
+      int32_t month         = ptz->month; /* index of the month */
+      int32_t week_of_month = ptz->mweek;
+
+      if (!leap_year)
+      {
+         days_of_month     = days_of_month_array[month];
+         startday_of_month = startday_of_month_array[month];
+         wday_month_start  = weekday_of_month_start[month] + wday_year_start;
+      }
+      else
+      {
+         days_of_month = days_of_month_array_ly[month];
+         startday_of_month = startday_of_month_array_ly[month];
+         wday_month_start = wday_year_start + weekday_of_month_start_ly[month];
+      }
+
+      if (wday_month_start >= 7)
+         wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
+
+      if (wday_month_start > (int32_t)ptz->wday)
+         switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
+      else
+         switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
+
+      days_of_month -=  7; /* maximum number of days if switchday increased by 7 needs to remain inside of that month */
+
+      while ((--week_of_month) && (switchday < days_of_month))
+         switchday += 7;
+
+      switchday += startday_of_month; /* start day of daylight saving within the year */
+   }
+
+   return ((switchday * 86400) + ptz->time);
+} /* int32_t get_rule_time(...) */
+
+
+/* ------------------------------------------------------------------------- *\
    mktime_of_zone is a thread safe mktime implementation for any timezone
    where the daylight saving rules are given in a struct TIME_ZONE_INFO
 \* ------------------------------------------------------------------------- */
@@ -1296,111 +1353,10 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
    if((isDaylightSaving < 0) && (ptzi->type > 1))
    {
-      const TIME_ZONE_RULE * ptz;
-      int32_t wday_year_start;
-      int32_t daylight_start; /* begin of day light saving in seconds after begin of the year */
-      int32_t standard_start; /* begin of standard time in seconds after begin of the year */
-      int32_t month; /* index of the month */
-      int32_t wday_month_start;
-      int32_t week_of_month;
-      int32_t switchday;
-
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
-      wday_year_start = (int32_t)(((tt / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
-
-      /* ------------------------------------------------------------------------- */
-
-      /* calculate the begin of the daylight saving after the start of the year in seconds */
-      ptz = &ptzi->daylight;
-      if(ptz->mode > 0)
-      {
-         daylight_start = ptz->year_day;
-
-         if((ptz->mode == 1) && leap_year && (daylight_start >= 59))
-            ++daylight_start; /* we have to ignore the 29th of February */
-      }
-      else
-      {
-         month         = ptz->month; /* index of the month */
-         week_of_month = ptz->mweek;
-
-         if (!leap_year)
-         {
-            days_of_month     = days_of_month_array[month];
-            startday_of_month = startday_of_month_array[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start[month];
-         }
-         else
-         {
-            days_of_month     = days_of_month_array_ly[month];
-            startday_of_month = startday_of_month_array_ly[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
-         }
-
-         if(wday_month_start >= 7)
-            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
-
-         if(wday_month_start > (int32_t) ptz->wday)
-            switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-         else
-            switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-
-         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
-
-         while((--week_of_month) && (switchday < days_of_month))
-            switchday += 7;
-
-         daylight_start = startday_of_month + switchday; /* start day of daylight saving within the year */
-      }
-      daylight_start = (daylight_start * 86400) + ptz->time; /* time offset of begin of the daylight saving within the year in seconds */
-
-      /* ------------------------------------------------------------------------- */
-
-      /* calculate the return to the standard time after the start of the year in seconds */
-      ptz = &ptzi->standard;
-      if(ptz->mode > 0)
-      {
-         standard_start = ptz->year_day;
-
-         if((ptz->mode == 1) && leap_year && (standard_start >= 59))
-            ++standard_start; /* we have to ignore the 29th of February */
-      }
-      else
-      {
-         month         = ptz->month; /* index of the month */
-         week_of_month = ptz->mweek;
-
-         if (!leap_year)
-         {
-            days_of_month     = days_of_month_array[month];
-            startday_of_month = startday_of_month_array[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start[month];
-         }
-         else
-         {
-            days_of_month     = days_of_month_array_ly[month];
-            startday_of_month = startday_of_month_array_ly[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
-         }
-
-         if(wday_month_start >= 7)
-            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
-
-         if(wday_month_start > (int32_t) ptz->wday)
-            switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-         else
-            switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-
-         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
-
-         while((--week_of_month) && (switchday < days_of_month))
-            switchday += 7;
-
-         standard_start = startday_of_month + switchday; /* start day of standard time within the year */
-      }
-      standard_start = (standard_start * 86400) + ptz->time + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
-
-      /* ------------------------------------------------------------------------- */
+      int32_t wday_year_start = (int32_t)(((tt / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
+      int32_t daylight_start = get_rule_time(&ptzi->daylight, leap_year, wday_year_start); /* time offset of begin of the daylight saving within the year in seconds */
+      int32_t standard_start = get_rule_time(&ptzi->standard, leap_year, wday_year_start) + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
 
       if (daylight_start > standard_start)
       {  /* southern hemisphere */
@@ -1487,15 +1443,9 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 
    if (ptzi->type > 1)
    {
-      int32_t daylight_start; /* begin of day light saving in seconds after begin of the year */
-      int32_t standard_start; /* begin of standard time in seconds after begin of the year */
-      int32_t month; /* index of the month */
-      int32_t startday_of_month;
-      int32_t wday_month_start;
-      int32_t week_of_month;
-      int32_t switchday;
-      int32_t time_of_day;
-      int32_t days_of_month;
+      int32_t  daylight_start; /* begin of day light saving in seconds after begin of the year */
+      int32_t  standard_start; /* begin of standard time in seconds after begin of the year */
+      int32_t  time_of_day;
       uint32_t day;
       int32_t  time_of_year;
       int32_t  wday_year_start;
@@ -1562,100 +1512,8 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
       wday_year_start = (int32_t)((((time - time_of_year) / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
-
-      /* ------------------------------------------------------------------------- */
-
-      /* calculate the begin of the daylight saving after the start of the year in seconds */
-      ptz = &ptzi->daylight;
-      if(ptz->mode > 0)
-      {
-         daylight_start = ptz->year_day;
-
-         if((ptz->mode == 1) && leap_year && (daylight_start >= 59))
-            ++daylight_start; /* we have to ignore the 29th of February */
-      }
-      else
-      {
-         month         = ptz->month; /* index of the month */
-         week_of_month = ptz->mweek;
-
-         if (!leap_year)
-         {
-            days_of_month     = days_of_month_array[month];
-            startday_of_month = startday_of_month_array[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start[month];
-         }
-         else
-         {
-            days_of_month     = days_of_month_array_ly[month];
-            startday_of_month = startday_of_month_array_ly[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
-         }
-
-         if(wday_month_start >= 7)
-            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
-
-         if(wday_month_start > (int32_t) ptz->wday)
-            switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-         else
-            switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-
-         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
-
-         while((--week_of_month) && (switchday < days_of_month))
-            switchday += 7;
-
-         daylight_start = startday_of_month + switchday; /* start day of daylight saving within the year */
-      }
-      daylight_start = (daylight_start * 86400) + ptz->time + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
-
-      /* ------------------------------------------------------------------------- */
-
-      /* calculate the return to the standard time after the start of the year in seconds */
-      ptz = &ptzi->standard;
-      if(ptz->mode > 0)
-      {
-         standard_start = ptz->year_day;
-
-         if((ptz->mode == 1) && leap_year && (standard_start >= 59))
-            ++standard_start; /* we have to ignore the 29th of February */
-      }
-      else
-      {
-         month         = ptz->month; /* index of the month */
-         week_of_month = ptz->mweek;
-
-         if (!leap_year)
-         {
-            days_of_month     = days_of_month_array[month];
-            startday_of_month = startday_of_month_array[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start[month];
-         }
-         else
-         {
-            days_of_month     = days_of_month_array_ly[month];
-            startday_of_month = startday_of_month_array_ly[month];
-            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
-         }
-
-         if(wday_month_start >= 7)
-            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
-
-         if(wday_month_start > (int32_t) ptz->wday)
-            switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-         else
-            switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-
-         days_of_month -= 7; /* days if switchday increased by 7 needs to be inside of that month */
-
-         while((--week_of_month) && (switchday < days_of_month))
-            switchday += 7;
-
-         standard_start = startday_of_month + switchday; /* start day of standard time within the year */
-      }
-      standard_start = (standard_start * 86400) + ptz->time + ptzi->daylight.bias;  /* time offset of returning to the standard time in the year in seconds */
-
-      /* ------------------------------------------------------------------------- */
+      daylight_start  = get_rule_time(&ptzi->daylight, leap_year, wday_year_start) + ptzi->standard.bias;   /* time offset of begin of the daylight saving within the year in seconds */
+      standard_start  = get_rule_time(&ptzi->standard, leap_year, wday_year_start) + ptzi->daylight.bias;   /* time offset of returning to the standard time in the year in seconds */
 
       if (daylight_start > standard_start)
       {  /* southern hemisphere */

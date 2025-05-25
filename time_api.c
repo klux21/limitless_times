@@ -748,6 +748,12 @@ static int read_TZ_zone_data (TIME_ZONE_RULE * ptr, int is_dst, char * psrc, cha
       if(size >= sizeof(ptr->zone_name))
          size = sizeof(ptr->zone_name) -1; /* limit the zone name to the size of our buffer */
 
+      if(*psrc == '<')
+      { /* we have to ignore the optional quotes of the tine zone name */
+         ++psrc;
+         size -= 2;
+      }
+
       ps = ptr->zone_name;
       while(size--)
          *ps++ = *psrc++; /* copy zone name string */

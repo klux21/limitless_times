@@ -1174,22 +1174,25 @@ void update_time_zone_info()
 
 
 /* ------------------------------------------------------------------------- *\
-  get_rule_time calculates the time in seconds a given daylight saving rule
-  applies after the begin of the year
+   get_rule_time is a helper function that calculates the time in seconds
+   that a given daylight saving rule applies after the begin of the year.
+   Beside of specific time zone rule it needs the information whether that
+   year is a leap year and which day of the week that year begins.   
 \* ------------------------------------------------------------------------- */
+
 static int32_t get_rule_time(const TIME_ZONE_RULE * ptz, int leap_year, int wday_year_start)
 {
    int32_t switchday; /* day after begin of the year when the rule applies */
 
    if (ptz->mode > 0)
-   {
+   { /* This modes are part of the Posix standard only but currently not used in the timezone database */
       switchday = ptz->year_day;
 
       if ((ptz->mode == 1) && leap_year && (switchday >= 59))
          ++switchday; /* we have to ignore the 29th of February */
    }
    else
-   {
+   { /* This part calculates the start day according to the common daylight saving rules. */
       int32_t days_of_month;
       int32_t startday_of_month;
       int32_t wday_month_start;
@@ -1205,9 +1208,9 @@ static int32_t get_rule_time(const TIME_ZONE_RULE * ptz, int leap_year, int wday
       }
       else
       {
-         days_of_month = days_of_month_array_ly[month];
+         days_of_month     = days_of_month_array_ly[month];
          startday_of_month = startday_of_month_array_ly[month];
-         wday_month_start = wday_year_start + weekday_of_month_start_ly[month];
+         wday_month_start  = weekday_of_month_start_ly[month] + wday_year_start;
       }
 
       if (wday_month_start >= 7)
@@ -1218,7 +1221,7 @@ static int32_t get_rule_time(const TIME_ZONE_RULE * ptz, int leap_year, int wday
       else
          switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-      days_of_month -=  7; /* maximum number of days if switchday increased by 7 needs to remain inside of that month */
+      days_of_month -=  7; /* maximum number of days because the switchday increased by 7 needs to remain inside of that month */
 
       while ((--week_of_month) && (switchday < days_of_month))
          switchday += 7;

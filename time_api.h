@@ -226,16 +226,16 @@ struct tm * new_localtime_r(const time_t * pt, struct tm * ptm);
 typedef struct TIME_ZONE_RULE_S TIME_ZONE_RULE;
 struct TIME_ZONE_RULE_S
 {
-   int32_t bias;     /* UTC = local time + bias */
+   int32_t bias;     /* UTC = local time + this bias */
 
    int32_t mode;     /* 0 = at given week of the month  1 = time frome begin of the year (leap day 02/29 ignored)  2 = time from begin of the year (leap day not ignored) */
    int32_t year_day; /* absolute or relative day since begin of the year */
    int32_t month;    /* month of the year  0 = January */
    int32_t mweek;    /* week of the month  1 .. 5  (5 == last week the wday occurs ) */
    int32_t wday;     /* day of the week the rule applies starting with 0 = Sunday */
-   int32_t time;     /* local time of the day the the time starts in seconds */
+   int32_t time;     /* local time of the day this time rule applies in seconds */
 
-   char    zone_name[72]; /* name of that time zone */
+   char    zone_name[72]; /* name of that time zone as usually given in TZ environment variable */
 };
 
 typedef struct TIME_ZONE_INFO_S TIME_ZONE_INFO;

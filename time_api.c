@@ -318,6 +318,19 @@ int calendar_week_of_time(time_t tt)
    return (kw_ret);
 } /* int calendar_week_of_time(time_t tt) */
 
+/* ------------------------------------------------------------------------- *\
+   Helper arrays for faster calculations
+\* ------------------------------------------------------------------------- */
+
+                                                 /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
+static const uint8_t  days_of_month_array[12]        = { 31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
+static const uint16_t startday_of_month_array[12]    = {  0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
+static const uint8_t  weekday_of_month_start[12]     = {  0,  3,  3,  6,   1,   4,   6,   2,   5,   0,   3,   5 }; /* offset of the weekday that the month starts with if not a leap year */
+
+static const uint8_t  days_of_month_array_ly[12]     = { 31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month in a leap year */
+static const uint16_t startday_of_month_array_ly[12] = {  0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
+static const uint8_t  weekday_of_month_start_ly[12]  = {  0,  3,  4,  0,   2,   5,   0,   3,   6,   1,   4,   6 }; /* offset of the weekday that the month starts with in a leap year */
+
 
 /* ------------------------------------------------------------------------- *\
    new_mkgmtime is a mkgmtime (timegm) implementation
@@ -412,30 +425,24 @@ time_t new_mkgmtime(const struct tm * ptm)
    }
 
    if(!leap_year)
-   {                                         /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
-      static const uint8_t  days_of_month[12]     = {31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-      static const uint16_t startday_of_month[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
-
-      if (ptm->tm_mday > days_of_month[ptm->tm_mon])
+   {
+      if (ptm->tm_mday > days_of_month_array[ptm->tm_mon])
       {
          errno = ERANGE;
          goto Exit;
       }
 
-      time_of_year = (startday_of_month[ptm->tm_mon] + (ptm->tm_mday - 1)) * 86400;
+      time_of_year = (startday_of_month_array[ptm->tm_mon] + (ptm->tm_mday - 1)) * 86400;
    }
    else
    {
-      static const int8_t  days_of_month[12]     = {31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-      static const int16_t startday_of_month[12] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
-
-      if (ptm->tm_mday > days_of_month[ptm->tm_mon])
+      if (ptm->tm_mday > days_of_month_array_ly[ptm->tm_mon])
       {
          errno = ERANGE;
          goto Exit;
       }
 
-      time_of_year = (startday_of_month[ptm->tm_mon] + (ptm->tm_mday - 1)) * 86400;
+      time_of_year = (startday_of_month_array_ly[ptm->tm_mon] + (ptm->tm_mday - 1)) * 86400;
    }
 
    time_of_year += ptm->tm_sec;
@@ -478,8 +485,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    uint32_t day;
    uint32_t time_of_day;
    uint32_t tmp;
-   int      leap_year = 0;
-   int      ignore_leap_year = 0;
+   int      leap_year = 1;
 
    static uint8_t mday[366] = /* day of a month of in a leap year */
    {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
@@ -559,7 +565,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
       }
       else
       {
-         ignore_leap_year = 1; /* we have to ignore the leap year within the first four years of a century */
+         leap_year = 0;
 
          while (day >= 365)
          {
@@ -578,20 +584,19 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    { /* last year of the remaining 4 year block */
       year += 3;
       day -= 1096;
+      leap_year = 0;
    }
    else if (day >= 731)
    { /* 3rd year of the 4 year block */
       year += 2;
       day -= 731;
+      leap_year = 0;
    }
    else if (day >= 366)
    { /* 2nd year of the 4 year block */
       year += 1;
       day -= 366;
-   }
-   else if (!ignore_leap_year)
-   {  /* 1rst year of the 4 year block */
-      leap_year = 1;
+      leap_year = 0;
    }
 
    year -=  1900;
@@ -1163,19 +1168,6 @@ void update_time_zone_info()
 
 
 /* ------------------------------------------------------------------------- *\
-   Helper arrays for faster calculations
-\* ------------------------------------------------------------------------- */
-
-                                                 /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
-static const uint8_t  days_of_month_array[12]        = { 31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-static const uint16_t startday_of_month_array[12]    = {  0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
-static const uint8_t  weekday_of_month_start[12]     = {  0,  3,  3,  6,   1,   4,   6,   2,   5,   0,   3,   5 }; /* offset of the weekday that the month starts with if not a leap year */
-
-static const uint8_t  days_of_month_array_ly[12]     = { 31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month in a leap year */
-static const uint16_t startday_of_month_array_ly[12] = {  0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
-static const uint8_t  weekday_of_month_start_ly[12]  = {  0,  3,  4,  0,   2,   5,   0,   3,   6,   1,   4,   6 }; /* offset of the weekday that the month starts with in a leap year */
-
-/* ------------------------------------------------------------------------- *\
    mktime_of_zone is a thread safe mktime implementation for any timezone
    where the daylight saving rules are given in a struct TIME_ZONE_INFO
 \* ------------------------------------------------------------------------- */
@@ -1188,7 +1180,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    int64_t epoch;
    int32_t time_of_year;
    int32_t startday_of_month;
-   const uint8_t * days_of_month;
+   int32_t days_of_month;
 
    if(!ptm)
    {
@@ -1273,16 +1265,16 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
    if(!leap_year)
    {
-      days_of_month     = days_of_month_array;
+      days_of_month     = days_of_month_array[ptm->tm_mon];
       startday_of_month = startday_of_month_array[ptm->tm_mon];
    }
    else
    {
-      days_of_month     = days_of_month_array_ly;
+      days_of_month     = days_of_month_array_ly[ptm->tm_mon];
       startday_of_month = startday_of_month_array_ly[ptm->tm_mon];
    }
 
-   if (ptm->tm_mday > days_of_month[ptm->tm_mon])
+   if (ptm->tm_mday > days_of_month)
    {
       errno = ERANGE;
       goto Exit;
@@ -1328,11 +1320,13 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
          if (!leap_year)
          {
+            days_of_month     = days_of_month_array[month];
             startday_of_month = startday_of_month_array[month];
             wday_month_start  = wday_year_start + weekday_of_month_start[month];
          }
          else
          {
+            days_of_month     = days_of_month_array_ly[month];
             startday_of_month = startday_of_month_array_ly[month];
             wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
          }
@@ -1345,7 +1339,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month[month] - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
 
          while((--week_of_month) && (switchday < month))
             switchday += 7;
@@ -1372,11 +1366,13 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
          if (!leap_year)
          {
+            days_of_month     = days_of_month_array[month];
             startday_of_month = startday_of_month_array[month];
             wday_month_start  = wday_year_start + weekday_of_month_start[month];
          }
          else
          {
+            days_of_month     = days_of_month_array_ly[month];
             startday_of_month = startday_of_month_array_ly[month];
             wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
          }
@@ -1389,7 +1385,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month[month] - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
 
          while((--week_of_month) && (switchday < month))
             switchday += 7;
@@ -1501,9 +1497,7 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       uint32_t day;
       int32_t  time_of_year;
       int32_t  wday_year_start;
-
-      int     leap_year = 0;
-      int     ignore_leap_year = 0;
+      int      leap_year = 1;
 
       int64_t  time = utc_time + ((int64_t) 719528 * 86400); /* add the time from 1/1/0000 to 1/1/1970 */
       int64_t  year;
@@ -1543,7 +1537,7 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
          }
          else
          {
-            ignore_leap_year = 1; /* we have to ignore the leap year within the first four years of a century */
+            leap_year = 0; /* we have to ignore the leap year within the first four years of a century */
 
             while (day >= 365)
             {
@@ -1562,20 +1556,19 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       { /* last year of the remaining 4 year block */
          year += 3;
          day -= 1096;
+         leap_year = 0;
       }
       else if (day >= 731)
       { /* 3rd year of the 4 year block */
          year += 2;
          day -= 731;
+         leap_year = 0;
       }
       else if (day >= 366)
       { /* 2n year of the 4 year block */
          year += 1;
          day -= 366;
-      }
-      else if (!ignore_leap_year)
-      {  /* 1rst year of the 4 year block */
-         leap_year = 1;
+         leap_year = 0;
       }
 
       time_of_year = ((int32_t) day * 86400) /* time between the begin of the day and the begin of the year */

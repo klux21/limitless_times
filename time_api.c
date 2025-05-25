@@ -1163,25 +1163,17 @@ void update_time_zone_info()
 
 
 /* ------------------------------------------------------------------------- *\
-   Helper variables for faster calculations
+   Helper arrays for faster calculations
 \* ------------------------------------------------------------------------- */
 
-static const uint8_t mod_7[] = {0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6, 0,1,2,3,4,5,6,
-                                0,1,2,3,4,5 };
-                                                       /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
-static const uint8_t  days_of_month_array[12]               = {31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-static const uint16_t startday_of_month_array[12]           = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
-static const uint8_t  days_of_month_array_leap_year[12]     = {31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
-static const uint16_t startday_of_month_array_leap_year[12] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
+                                                 /* month 1   2   3   4   5     6    7    8    9   10   11   12 */
+static const uint8_t  days_of_month_array[12]        = { 31, 28, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month */
+static const uint16_t startday_of_month_array[12]    = {  0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 }; /* offset of the first day of a month to the begin of the year that is not a leap year */
+static const uint8_t  weekday_of_month_start[12]     = {  0,  3,  3,  6,   1,   4,   6,   2,   5,   0,   3,   5 }; /* offset of the weekday that the month starts with if not a leap year */
 
+static const uint8_t  days_of_month_array_ly[12]     = { 31, 29, 31, 30,  31,  30,  31,  31,  30,  31,  30,  31 }; /* number of the days in the month in a leap year */
+static const uint16_t startday_of_month_array_ly[12] = {  0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }; /* offset of the first day of a month from the begin of the year in a leap year */
+static const uint8_t  weekday_of_month_start_ly[12]  = {  0,  3,  4,  0,   2,   5,   0,   3,   6,   1,   4,   6 }; /* offset of the weekday that the month starts with in a leap year */
 
 /* ------------------------------------------------------------------------- *\
    mktime_of_zone is a thread safe mktime implementation for any timezone
@@ -1195,8 +1187,8 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    int64_t year;
    int64_t epoch;
    int32_t time_of_year;
-   const uint8_t  * days_of_month;
-   const uint16_t * startday_of_month;
+   int32_t startday_of_month;
+   const uint8_t * days_of_month;
 
    if(!ptm)
    {
@@ -1282,12 +1274,12 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    if(!leap_year)
    {
       days_of_month     = days_of_month_array;
-      startday_of_month = startday_of_month_array;
+      startday_of_month = startday_of_month_array[ptm->tm_mon];
    }
    else
    {
-      days_of_month     = days_of_month_array_leap_year;
-      startday_of_month = startday_of_month_array_leap_year;
+      days_of_month     = days_of_month_array_ly;
+      startday_of_month = startday_of_month_array_ly[ptm->tm_mon];
    }
 
    if (ptm->tm_mday > days_of_month[ptm->tm_mon])
@@ -1296,7 +1288,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
       goto Exit;
    }
 
-   time_of_year = (startday_of_month[ptm->tm_mon] + (ptm->tm_mday - 1)) * 86400;
+   time_of_year = (startday_of_month + (ptm->tm_mday - 1)) * 86400;
 
    time_of_year += ptm->tm_sec;
    time_of_year += ptm->tm_min * 60;
@@ -1311,7 +1303,6 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
       int32_t daylight_start; /* begin of day light saving in seconds after begin of the year */
       int32_t standard_start; /* begin of standard time in seconds after begin of the year */
       int32_t month; /* index of the month */
-      int32_t month_start_day;
       int32_t wday_month_start;
       int32_t week_of_month;
       int32_t switchday;
@@ -1332,10 +1323,22 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
       }
       else
       {
-         month            = ptz->month; /* index of the month */
-         month_start_day  = startday_of_month[month];
-         wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
-         week_of_month    = ptz->mweek;
+         month         = ptz->month; /* index of the month */
+         week_of_month = ptz->mweek;
+
+         if (!leap_year)
+         {
+            startday_of_month = startday_of_month_array[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start[month];
+         }
+         else
+         {
+            startday_of_month = startday_of_month_array_ly[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
+         }
+
+         if(wday_month_start >= 7)
+            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
 
          if(wday_month_start > (int32_t) ptz->wday)
             switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
@@ -1347,7 +1350,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
          while((--week_of_month) && (switchday < month))
             switchday += 7;
 
-         daylight_start = month_start_day + switchday; /* start day of daylight saving within the year */
+         daylight_start = startday_of_month + switchday; /* start day of daylight saving within the year */
       }
       daylight_start = (daylight_start * 86400) + ptz->time; /* time offset of begin of the daylight saving within the year in seconds */
 
@@ -1364,10 +1367,22 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
       }
       else
       {
-         month            = ptz->month; /* index of the month */
-         month_start_day  = startday_of_month[month];
-         wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
-         week_of_month    = ptz->mweek;
+         month         = ptz->month; /* index of the month */
+         week_of_month = ptz->mweek;
+
+         if (!leap_year)
+         {
+            startday_of_month = startday_of_month_array[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start[month];
+         }
+         else
+         {
+            startday_of_month = startday_of_month_array_ly[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
+         }
+
+         if(wday_month_start >= 7)
+            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
 
          if(wday_month_start > (int32_t) ptz->wday)
             switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
@@ -1379,7 +1394,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
          while((--week_of_month) && (switchday < month))
             switchday += 7;
 
-         standard_start = month_start_day + switchday; /* start day of standard time within the year */
+         standard_start = startday_of_month + switchday; /* start day of standard time within the year */
       }
       standard_start = (standard_start * 86400) + ptz->time + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
 
@@ -1475,13 +1490,12 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 
       const TIME_ZONE_RULE * ptz;
       int32_t month; /* index of the month */
-      int32_t month_start_day;
+      int32_t startday_of_month;
       int32_t wday_month_start;
       int32_t week_of_month;
       int32_t switchday;
       int32_t time_of_day;
-      const uint8_t  * days_of_month;
-      const uint16_t * startday_of_month;
+      int32_t days_of_month;
 
       uint32_t tmp;
       uint32_t day;
@@ -1570,17 +1584,6 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
       wday_year_start = (int32_t)((((time - time_of_year) / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
 
-      if(!leap_year)
-      {
-         days_of_month     = days_of_month_array;
-         startday_of_month = startday_of_month_array;
-      }
-      else
-      {
-         days_of_month     = days_of_month_array_leap_year;
-         startday_of_month = startday_of_month_array_leap_year;
-      }
-
       /* ------------------------------------------------------------------------- */
 
       /* calculate the begin of the daylight saving after the start of the year in seconds */
@@ -1594,22 +1597,36 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       }
       else
       {
-         month            = ptz->month; /* index of the month */
-         month_start_day  = startday_of_month[month];
-         wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
-         week_of_month    = ptz->mweek;
+         month         = ptz->month; /* index of the month */
+         week_of_month = ptz->mweek;
+
+         if (!leap_year)
+         {
+            days_of_month     = days_of_month_array[month];
+            startday_of_month = startday_of_month_array[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start[month];
+         }
+         else
+         {
+            days_of_month     = days_of_month_array_ly[month];
+            startday_of_month = startday_of_month_array_ly[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
+         }
+
+         if(wday_month_start >= 7)
+            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
 
          if(wday_month_start > (int32_t) ptz->wday)
             switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month[month] - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
 
          while((--week_of_month) && (switchday < month))
             switchday += 7;
 
-         daylight_start = month_start_day + switchday; /* start day of daylight saving within the year */
+         daylight_start = startday_of_month + switchday; /* start day of daylight saving within the year */
       }
       daylight_start = (daylight_start * 86400) + ptz->time + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
 
@@ -1626,22 +1643,36 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       }
       else
       {
-         month            = ptz->month; /* index of the month */
-         month_start_day  = startday_of_month[month];
-         wday_month_start = mod_7[wday_year_start + month_start_day]; /* (wday_year_start + month_start_day) % 7; */
-         week_of_month    = ptz->mweek;
+         month         = ptz->month; /* index of the month */
+         week_of_month = ptz->mweek;
+
+         if (!leap_year)
+         {
+            days_of_month     = days_of_month_array[month];
+            startday_of_month = startday_of_month_array[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start[month];
+         }
+         else
+         {
+            days_of_month     = days_of_month_array_ly[month];
+            startday_of_month = startday_of_month_array_ly[month];
+            wday_month_start  = wday_year_start + weekday_of_month_start_ly[month];
+         }
+
+         if(wday_month_start >= 7)
+            wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
 
          if(wday_month_start > (int32_t) ptz->wday)
             switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
          else
             switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
 
-         month = days_of_month[month] - 7; /* days if switchday increased by 7 needs to be inside of that month */
+         month = days_of_month - 7; /* days if switchday increased by 7 needs to be inside of that month */
 
          while((--week_of_month) && (switchday < month))
             switchday += 7;
 
-         standard_start = month_start_day + switchday; /* start day of standard time within the year */
+         standard_start = startday_of_month + switchday; /* start day of standard time within the year */
       }
       standard_start = (standard_start * 86400) + ptz->time + ptzi->daylight.bias;  /* time offset of returning to the standard time in the year in seconds */
 

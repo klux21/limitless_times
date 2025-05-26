@@ -640,6 +640,86 @@ static TIME_ZONE_INFO ti;   /* static time zone information as returned by the s
 
 
 /* ------------------------------------------------------------------------- *\
+   get_rule_offset is a helper function that calculates the time in seconds
+   that a given daylight saving rule applies after the begin of the year.
+   Beside of specific time zone rule it needs the information whether that
+   year is a leap year and which day of the week that year begins.
+\* ------------------------------------------------------------------------- */
+
+static int32_t get_rule_offset(const TIME_ZONE_RULE * ptz, int leap_year, int wday_year_start)
+{
+   int32_t switchday; /* day after begin of the year when the rule applies */
+
+   if (ptz->mode > 0)
+   { /* This modes are part of the Posix standard only but currently not used in the timezone database */
+      switchday = ptz->year_day;
+
+      if ((ptz->mode == 1) && leap_year && (switchday >= 59))
+         ++switchday; /* we have to ignore the 29th of February */
+   }
+   else
+   { /* This part calculates the start day according to the common daylight saving rules. */
+      int32_t days_of_month;
+      int32_t startday_of_month;
+      int32_t wday_month_start;
+
+      int32_t month         = ptz->month; /* index of the month */
+      int32_t week_of_month = ptz->mweek;
+
+      if (!leap_year)
+      {
+         days_of_month     = days_of_month_array[month];
+         startday_of_month = startday_of_month_array[month];
+         wday_month_start  = weekday_of_month_start[month] + wday_year_start;
+      }
+      else
+      {
+         days_of_month     = days_of_month_array_ly[month];
+         startday_of_month = startday_of_month_array_ly[month];
+         wday_month_start  = weekday_of_month_start_ly[month] + wday_year_start;
+      }
+
+      if (wday_month_start >= 7)
+         wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
+
+      if (wday_month_start > (int32_t)ptz->wday)
+         switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
+      else
+         switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
+
+      days_of_month -=  7; /* maximum number of days because the switchday increased by 7 needs to remain inside of that month */
+
+      while ((--week_of_month) && (switchday < days_of_month))
+         switchday += 7;
+
+      switchday += startday_of_month; /* start day of daylight saving within the year */
+   }
+
+   return ((switchday * 86400) + ptz->time);
+} /* int32_t get_rule_offset(...) */
+
+
+/* ------------------------------------------------------------------------- *\
+   init_tz_rule_offsets is precalculates the 14 offsets in seconds after begin of
+   a year that a rules applies to speedup the time calculations afterwards.
+\* ------------------------------------------------------------------------- */
+
+static void init_tz_rule_offsets(TIME_ZONE_RULE * ptz)
+{
+   int32_t * poff = ptz->start;
+   int       wday = 0;
+
+   do
+   {
+      poff[0] = get_rule_offset(ptz, 0, wday);
+      poff[7] = get_rule_offset(ptz, 1, wday);
+      ++poff;
+   }
+   while(++wday < 7);
+} /* void init_tz_rule_offsets(TIME_ZONE_RULE * ptz) */
+
+
+/* ------------------------------------------------------------------------- *\
    read_TZ_zone_data is a helper of read_TZ for reading time zone name and
    time offsets
 \* ------------------------------------------------------------------------- */
@@ -932,6 +1012,8 @@ static int read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
    ptr->wday     = wday;
    ptr->time     = (hour * 3600) + (minutes * 60) + seconds;
 
+   init_tz_rule_offsets(ptr);
+
    *ppend = ps;
 
    bRet = 1;
@@ -1125,7 +1207,17 @@ void update_time_zone_info()
          ti.daylight.wday  = tzi.DaylightDate.wDayOfWeek;
          ti.daylight.time  = tzi.DaylightDate.wHour * 3600;
 
-         ti.type = (ti.daylight.bias == ti.standard.bias) ? 1 : 2;
+         if(ti.daylight.bias == ti.standard.bias)
+         {
+            ti.type = 1;
+         }
+         else
+         {
+            ti.type = 2;
+
+            init_tz_rule_offsets(&ti.standard);
+            init_tz_rule_offsets(&ti.daylight);
+         }
       }
       else
       {
@@ -1174,74 +1266,14 @@ void update_time_zone_info()
 
 
 /* ------------------------------------------------------------------------- *\
-   get_rule_time is a helper function that calculates the time in seconds
-   that a given daylight saving rule applies after the begin of the year.
-   Beside of specific time zone rule it needs the information whether that
-   year is a leap year and which day of the week that year begins.
-\* ------------------------------------------------------------------------- */
-
-static int32_t get_rule_time(const TIME_ZONE_RULE * ptz, int leap_year, int wday_year_start)
-{
-   int32_t switchday; /* day after begin of the year when the rule applies */
-
-   if (ptz->mode > 0)
-   { /* This modes are part of the Posix standard only but currently not used in the timezone database */
-      switchday = ptz->year_day;
-
-      if ((ptz->mode == 1) && leap_year && (switchday >= 59))
-         ++switchday; /* we have to ignore the 29th of February */
-   }
-   else
-   { /* This part calculates the start day according to the common daylight saving rules. */
-      int32_t days_of_month;
-      int32_t startday_of_month;
-      int32_t wday_month_start;
-
-      int32_t month         = ptz->month; /* index of the month */
-      int32_t week_of_month = ptz->mweek;
-
-      if (!leap_year)
-      {
-         days_of_month     = days_of_month_array[month];
-         startday_of_month = startday_of_month_array[month];
-         wday_month_start  = weekday_of_month_start[month] + wday_year_start;
-      }
-      else
-      {
-         days_of_month     = days_of_month_array_ly[month];
-         startday_of_month = startday_of_month_array_ly[month];
-         wday_month_start  = weekday_of_month_start_ly[month] + wday_year_start;
-      }
-
-      if (wday_month_start >= 7)
-         wday_month_start -= 7; /* (wday_year_start + weekday_of_month_start[month]) % 7; */
-
-      if (wday_month_start > (int32_t)ptz->wday)
-         switchday = ptz->wday + 7 - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-      else
-         switchday = ptz->wday - wday_month_start; /* set switchday to the index of the first matching day of week within the month */
-
-      days_of_month -=  7; /* maximum number of days because the switchday increased by 7 needs to remain inside of that month */
-
-      while ((--week_of_month) && (switchday < days_of_month))
-         switchday += 7;
-
-      switchday += startday_of_month; /* start day of daylight saving within the year */
-   }
-
-   return ((switchday * 86400) + ptz->time);
-} /* int32_t get_rule_time(...) */
-
-
-/* ------------------------------------------------------------------------- *\
    mktime_of_zone is a thread safe mktime implementation for any timezone
    where the daylight saving rules are given in a struct TIME_ZONE_INFO
 \* ------------------------------------------------------------------------- */
 time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
    int64_t tt = -1;
-   int     leap_year = 0;
-   int     isDaylightSaving;
+   int32_t leap_year = 0;
+   int32_t isDaylightSaving;
    int64_t year;
    int64_t epoch;
    int32_t time_of_year;
@@ -1272,23 +1304,21 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
    year -= epoch * 400; /* year is between 0 and 399 now */
 
-   tt = epoch * ((int64_t) 146097 * 86400); /* time of the 400 year epochs */
-
    if (year >= 100)
    {
       if (year >= 300)
       {
-         tt += (int64_t) 86400 * (36525 + 36524 + 36524);
+         tt = (int64_t) 86400 * (36525 + 36524 + 36524);
          year -= 300;
       }
       else if (year >= 200)
       {
-         tt += (int64_t) 86400 * (36525 + 36524);
+         tt = (int64_t) 86400 * (36525 + 36524);
          year -= 200;
       }
       else
       {
-         tt += (int64_t) 86400 * 36525;
+         tt = (int64_t) 86400 * 36525;
          year -= 100;
       }
 
@@ -1316,7 +1346,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    }
    else
    {
-      tt += (year >> 2) * (1461 * 86400); /* time of full four year epochs */
+      tt = (year >> 2) * (1461 * 86400); /* time of full four year epochs */
       year &= 3;
 
       if(year == 3)
@@ -1358,8 +1388,8 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    {
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
       int32_t wday_year_start = (int32_t)(((tt / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
-      int32_t daylight_start = get_rule_time(&ptzi->daylight, leap_year, wday_year_start); /* time offset of begin of the daylight saving within the year in seconds */
-      int32_t standard_start = get_rule_time(&ptzi->standard, leap_year, wday_year_start) + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
+      int32_t daylight_start = ptzi->daylight.start[wday_year_start + (leap_year * 7)]; /* time offset of begin of the daylight saving within the year in seconds */
+      int32_t standard_start = ptzi->standard.start[wday_year_start + (leap_year * 7)] + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
 
       if (daylight_start > standard_start)
       {  /* southern hemisphere */
@@ -1384,6 +1414,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
          tt += ptzi->standard.bias;
    }
 
+   tt += epoch * ((int64_t) 146097 * 86400); /* time of the 400 year epochs */
    tt += (int64_t) time_of_year;
    tt -= (int64_t) 719528 * 86400; /* subtract the time from 1/1/0000 to 1/1/1970 */
 
@@ -1441,8 +1472,8 @@ time_t new_mktime(const struct tm * ptm)
 \* ------------------------------------------------------------------------- */
 struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
-   const TIME_ZONE_RULE * ptz;
-   int   isDaylightSaving = 0;
+   const   TIME_ZONE_RULE * ptz;
+   int32_t isDaylightSaving = 0;
 
    if (ptzi->type > 1)
    {
@@ -1452,7 +1483,7 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
       uint32_t day;
       int32_t  time_of_year;
       int32_t  wday_year_start;
-      int      leap_year = 1;
+      int32_t  leap_year = 1;
 
       int64_t  time = utc_time + ((int64_t) 719528 * 86400); /* add the time from 1/1/0000 to 1/1/1970 */
       int64_t  year;
@@ -1515,8 +1546,8 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
       wday_year_start = (int32_t)((((time - time_of_year) / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
-      daylight_start  = get_rule_time(&ptzi->daylight, leap_year, wday_year_start) + ptzi->standard.bias;   /* time offset of begin of the daylight saving within the year in seconds */
-      standard_start  = get_rule_time(&ptzi->standard, leap_year, wday_year_start) + ptzi->daylight.bias;   /* time offset of returning to the standard time in the year in seconds */
+      daylight_start  = ptzi->daylight.start[wday_year_start + (leap_year * 7)] + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
+      standard_start  = ptzi->standard.start[wday_year_start + (leap_year * 7)] + ptzi->daylight.bias; /* time offset of returning to the standard time in the year in seconds */
 
       if (daylight_start > standard_start)
       {  /* southern hemisphere */

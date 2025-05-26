@@ -226,15 +226,16 @@ struct tm * new_localtime_r(const time_t * pt, struct tm * ptm);
 typedef struct TIME_ZONE_RULE_S TIME_ZONE_RULE;
 struct TIME_ZONE_RULE_S
 {
-   int32_t bias;     /* UTC = local time + this bias */
+   int32_t bias;          /* UTC = local time + this bias */
 
-   int32_t mode;     /* 0 = at given week of the month  1 = time frome begin of the year (leap day 02/29 ignored)  2 = time from begin of the year (leap day not ignored) */
-   int32_t year_day; /* absolute or relative day since begin of the year */
-   int32_t month;    /* month of the year  0 = January */
-   int32_t mweek;    /* week of the month  1 .. 5  (5 == last week the wday occurs ) */
-   int32_t wday;     /* day of the week the rule applies starting with 0 = Sunday */
-   int32_t time;     /* local time of the day this time rule applies in seconds */
+   int32_t mode;          /* 0 = at given week of the month  1 = time frome begin of the year (leap day 02/29 ignored)  2 = time from begin of the year (leap day not ignored) */
+   int32_t year_day;      /* absolute or relative day since begin of the year */
+   int32_t month;         /* month of the year  0 = January */
+   int32_t mweek;         /* week of the month  1 .. 5  (5 == last week the wday occurs ) */
+   int32_t wday;          /* day of the week the rule applies starting with 0 = Sunday */
+   int32_t time;          /* local time of the day that this time rule applies in seconds */
 
+   int32_t start[14];     /* by init_tz_rule_offsets() precalculated time of a year that this rule applies depending on the weekday that the year begins with */
    char    zone_name[72]; /* name of the time zone as usually specified in TZ environment variable */
 };
 
@@ -246,7 +247,6 @@ struct TIME_ZONE_INFO_S
    int32_t        type;     /* 0 = uninitialized  1 = standard time only  2 = day light saving */
 };
 
-
 /* ------------------------------------------------------------------------- *\
    read_TZ parses a Unix conform TZ evironment variable conform string for
    the time zone rules and stores this rules in success case in a struct
@@ -256,6 +256,11 @@ struct TIME_ZONE_INFO_S
 \* ------------------------------------------------------------------------- */
 int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);
 
+/* ------------------------------------------------------------------------- *\
+   get_rule_offsets calculates the 14 offsets in seconds after begin of a
+   year that a rules applies to speedup the time calculations afterwards.
+\* ------------------------------------------------------------------------- */
+void get_rule_offsets(TIME_ZONE_RULE * ptz);
 
 /* ------------------------------------------------------------------------- *\
    mktime_of_zone is a thread safe mktime implementation for any timezone

@@ -256,11 +256,6 @@ struct TIME_ZONE_INFO_S
 \* ------------------------------------------------------------------------- */
 int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);
 
-/* ------------------------------------------------------------------------- *\
-   get_rule_offsets calculates the 14 offsets in seconds after begin of a
-   year that a rules applies to speedup the time calculations afterwards.
-\* ------------------------------------------------------------------------- */
-void get_rule_offsets(TIME_ZONE_RULE * ptz);
 
 /* ------------------------------------------------------------------------- *\
    mktime_of_zone is a thread safe mktime implementation for any timezone

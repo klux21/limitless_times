@@ -235,7 +235,6 @@ struct TIME_ZONE_RULE_S
    int32_t wday;          /* day of the week the rule applies starting with 0 = Sunday */
    int32_t time;          /* local time of the day that this time rule applies in seconds */
 
-   int32_t start[14];     /* by init_tz_rule_offsets() precalculated time of a year that this rule applies depending on the weekday that the year begins with */
    char    zone_name[72]; /* name of the time zone as usually specified in TZ environment variable */
 };
 

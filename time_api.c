@@ -699,26 +699,6 @@ static int32_t get_rule_offset(const TIME_ZONE_RULE * ptz, int leap_year, int wd
 
 
 /* ------------------------------------------------------------------------- *\
-   init_tz_rule_offsets is precalculates the 14 offsets in seconds after begin of
-   a year that a rules applies to speedup the time calculations afterwards.
-\* ------------------------------------------------------------------------- */
-
-static void init_tz_rule_offsets(TIME_ZONE_RULE * ptz)
-{
-   int32_t * poff = ptz->start;
-   int       wday = 0;
-
-   do
-   {
-      poff[0] = get_rule_offset(ptz, 0, wday);
-      poff[7] = get_rule_offset(ptz, 1, wday);
-      ++poff;
-   }
-   while(++wday < 7);
-} /* void init_tz_rule_offsets(TIME_ZONE_RULE * ptz) */
-
-
-/* ------------------------------------------------------------------------- *\
    read_TZ_zone_data is a helper of read_TZ for reading time zone name and
    time offsets
 \* ------------------------------------------------------------------------- */
@@ -1011,8 +991,6 @@ static int read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
    ptr->wday     = wday;
    ptr->time     = (hour * 3600) + (minutes * 60) + seconds;
 
-   init_tz_rule_offsets(ptr);
-
    *ppend = ps;
 
    bRet = 1;
@@ -1207,16 +1185,9 @@ void update_time_zone_info()
          ti.daylight.time  = tzi.DaylightDate.wHour * 3600;
 
          if(ti.daylight.bias == ti.standard.bias)
-         {
             ti.type = 1;
-         }
          else
-         {
             ti.type = 2;
-
-            init_tz_rule_offsets(&ti.standard);
-            init_tz_rule_offsets(&ti.daylight);
-         }
       }
       else
       {
@@ -1387,8 +1358,8 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    {
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
       int32_t wday_year_start = (int32_t)(((tt / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
-      int32_t daylight_start = ptzi->daylight.start[wday_year_start + (leap_year * 7)]; /* time offset of begin of the daylight saving within the year in seconds */
-      int32_t standard_start = ptzi->standard.start[wday_year_start + (leap_year * 7)] + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
+      int32_t daylight_start = get_rule_offset(&ptzi->daylight, leap_year, wday_year_start); /* time offset of begin of the daylight saving within the year in seconds */
+      int32_t standard_start = get_rule_offset(&ptzi->standard, leap_year, wday_year_start) + (ptzi->daylight.bias - ptzi->standard.bias); /* time offset of returning to the standard time in the year in seconds */
 
       if (daylight_start > standard_start)
       {  /* southern hemisphere */
@@ -1545,8 +1516,8 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 
       /* The day of week calculation works well for years before 0 as well because every 400 year epoch starts with the same day of week */
       wday_year_start = (int32_t)((((time - time_of_year) / 86400) + 6 /* 6 is offset at 1/1/0000 */) % 7); /* day of the week the year starts with 0=Sunday 1= Monday ... */
-      daylight_start  = ptzi->daylight.start[wday_year_start + (leap_year * 7)] + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
-      standard_start  = ptzi->standard.start[wday_year_start + (leap_year * 7)] + ptzi->daylight.bias; /* time offset of returning to the standard time in the year in seconds */
+      daylight_start  = get_rule_offset(&ptzi->daylight, leap_year, wday_year_start) + ptzi->standard.bias; /* time offset of begin of the daylight saving within the year in seconds */
+      standard_start  = get_rule_offset(&ptzi->standard, leap_year, wday_year_start) + ptzi->daylight.bias; /* time offset of returning to the standard time in the year in seconds */
 
       if (daylight_start > standard_start)
       {  /* southern hemisphere */

@@ -367,23 +367,21 @@ time_t new_mkgmtime(const struct tm * ptm)
 
    year -= epoch * 400; /* year is between 0 and 399 now */
 
-   tt = epoch * ((int64_t) 146097 * 86400); /* time of the 400 year epochs */
-
    if (year >= 100)
    {
       if (year >= 300)
       {
-         tt += (int64_t) 86400 * (36525 + 36524 + 36524);
+         tt = (int64_t) 86400 * (36525 + 36524 + 36524);
          year -= 300;
       }
       else if (year >= 200)
       {
-         tt += (int64_t) 86400 * (36525 + 36524);
+         tt = (int64_t) 86400 * (36525 + 36524);
          year -= 200;
       }
       else
       {
-         tt += (int64_t) 86400 * 36525;
+         tt = (int64_t) 86400 * 36525;
          year -= 100;
       }
 
@@ -411,7 +409,7 @@ time_t new_mkgmtime(const struct tm * ptm)
    }
    else
    {
-      tt += (year >> 2) * (1461 * 86400); /* time of full four year epochs */
+      tt = (year >> 2) * (1461 * 86400); /* time of full four year epochs */
       year &= 3;
 
       if(year == 3)
@@ -449,6 +447,7 @@ time_t new_mkgmtime(const struct tm * ptm)
    time_of_year += ptm->tm_min * 60;
    time_of_year += ptm->tm_hour * 3600;
 
+   tt += epoch * ((int64_t) 146097 * 86400); /* time of the 400 year epochs */
    tt += (int64_t) time_of_year;
    tt -= (int64_t) 719528 * 86400; /* subtract the time from 1/1/0000 until 1/1/1970 */
 

@@ -265,13 +265,6 @@ int test_speed()
    stm.tm_sec   = 59;
    stm.tm_isdst = -1;
 
-   i  = 1000000;
-   t0 = unix_time();
-   while (i--)
-      tt = new_mkgmtime(&stm);
-   t1 = unix_time() - t0;
-   fprintf(stdout, "An average _____ new_mkgmtime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
-
 #ifdef _WIN32
    i  = 1000000;
    t0 = unix_time();
@@ -288,9 +281,55 @@ int test_speed()
    fprintf(stdout, "An average ____ common timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 #endif
 
+   i = 1000000;
+   t0 = unix_time();
+   while (i--)
+      tt = std_timegm(&stm);
+   t1 = unix_time() - t0;
+   fprintf(stdout, "An average _______ std_timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+
    if (ot != tt)
    {
-      fprintf (stderr, "Return values of mkgmtime() and new_gmmktime() differ! (%ld != %ld)", (long) ot, (long) tt);
+      fprintf (stderr, "Return values of timegm() and new_timegm() differ! (%ld != %ld)", (long) ot, (long) tt);
+      goto Exit;
+   }
+
+   i  = 1000000;
+   t0 = unix_time();
+   while (i--)
+      tt = new_timegm(&stm);
+   t1 = unix_time() - t0;
+   fprintf(stdout, "An average _______ new_timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+
+   if (ot != tt)
+   {
+      fprintf (stderr, "Return values of timegm() and std_timegm() differ! (%ld != %ld)", (long) ot, (long) tt);
+      goto Exit;
+   }
+
+   i  = 1000000;
+   t0 = unix_time();
+   while (i--)
+   {
+      stm.tm_isdst = -1;
+      ot = mktime(&stm);
+   }
+   t1 = unix_time() - t0;
+   fprintf(stdout, "An average ____ common mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+
+   i  = 1000000;
+   t0 = unix_time();
+   while (i--)
+   {
+      stm.tm_isdst = -1;
+      tt = std_mktime(&stm);
+   }
+   t1 = unix_time() - t0;
+   fprintf(stdout, "An average _______ std_mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+
+   if (ot != tt)
+   {
+      fprintf (stderr, "Return values of mktime() and std_mktime() differ! (%ld != %ld)", (long) ot, (long) tt);
       goto Exit;
    }
 
@@ -304,16 +343,6 @@ int test_speed()
    t1 = unix_time() - t0;
    fprintf(stdout, "An average _______ new_mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
-   i  = 1000000;
-   t0 = unix_time();
-   while (i--)
-   {
-      stm.tm_isdst = -1;
-      ot = mktime(&stm);
-   }
-   t1 = unix_time() - t0;
-   fprintf(stdout, "An average ____ common mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
-
    if (ot != tt)
    {
       fprintf (stderr, "Return values of mktime() and new_mktime() differ! (%ld != %ld)", (long) ot, (long) tt);
@@ -323,16 +352,16 @@ int test_speed()
    i  = 1000000;
    t0 = unix_time();
    while (i--)
-      new_gmtime_r(&tt, &stm);
+      gmtime_r(&tt, &otm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average _____ new_gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average __ common gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
    t0 = unix_time();
    while (i--)
-      gmtime_r(&tt, &otm);
+      new_gmtime_r(&tt, &stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average __ common gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average _____ new_gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
    if ((otm.tm_gmtoff != stm.tm_gmtoff) ||
@@ -364,16 +393,16 @@ int test_speed()
    i  = 1000000;
    t0 = unix_time();
    while (i--)
-      new_localtime_r(&tt, &stm);
+      localtime_r(&tt, &otm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average __ new_localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average common localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    i  = 1000000;
    t0 = unix_time();
    while (i--)
-      localtime_r(&tt, &otm);
+      new_localtime_r(&tt, &stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average common localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average __ new_localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
    if ((otm.tm_gmtoff != stm.tm_gmtoff) || strcmp(otm.tm_zone, stm.tm_zone))
@@ -794,7 +823,7 @@ int test_new_gmtime_r()
       if (ptm->tm_sec != sec)
          goto Exit;
 
-      if (t != new_mkgmtime(ptm))
+      if (t != new_timegm(ptm))
          goto Exit;
 
       ++t;
@@ -929,8 +958,19 @@ int main(int argc, char * argv[])
    if(!test_conversions())
       goto Exit;
 
-#if 0
+#if 0 /* ndef _WIN32 */
    pTZ = "XET-2XEST,M3.4.4/122,M10.4.4/122";
+   setenv("TZ", pTZ, 1);
+
+   tzset();
+   update_time_zone_info();
+
+   if (!test_speed())
+      goto Exit;
+
+   if (!test_conversions())
+      goto Exit;
+
    pTZ = "<-04>4<-03>,M9.1.6/24,M4.1.6/24";
 
    setenv("TZ", pTZ, 1);

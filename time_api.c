@@ -294,7 +294,7 @@ int week_of_year(int year, int month, int day)
    stm.tm_mday = day;
    stm.tm_hour = 11;
 
-   timestamp = new_mkgmtime(&stm);
+   timestamp = new_timegm(&stm);
    new_gmtime_r(&timestamp, &stm);
 
    kw_ret = calendar_week_of_year(&stm);
@@ -333,9 +333,10 @@ static const uint8_t  weekday_of_month_start_ly[12]  = {  0,  3,  4,  0,   2,   
 
 
 /* ------------------------------------------------------------------------- *\
-   new_mkgmtime is a mkgmtime (timegm) implementation
+   new_timegm is a timegm (mkgmtime) implementation that does not adjust
+   any members of the input struct as timegm (mkgmtime) does.
 \* ------------------------------------------------------------------------- */
-time_t new_mkgmtime(const struct tm * ptm)
+time_t new_timegm(const struct tm * ptm)
 {
    int64_t tt = -1;
    int64_t year;
@@ -460,8 +461,23 @@ time_t new_mkgmtime(const struct tm * ptm)
 
    Exit:;
    return ((time_t) tt);
-} /* time_t new_mkgmtime(struct tm * ptm) */
+} /* time_t new_timegm(struct tm * ptm) */
 
+
+/* ------------------------------------------------------------------------- *\
+   std_timegm is a timegm (mkgmtime) implementation that adjusts the members
+   of the input struct as the C standard requires.
+\* ------------------------------------------------------------------------- */
+
+time_t std_timegm(struct tm * ptm)
+{
+   time_t t_ret = new_timegm(ptm);
+
+   if((t_ret != (time_t) -1) || !errno)
+       new_gmtime_r(&t_ret, ptm);
+
+   return(t_ret);
+} /* time_t std_timegm(struct tm * ptm) */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -613,6 +629,8 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
    time_of_day %= 3600;
    ptm->tm_min  = time_of_day / 60;
    ptm->tm_sec  = time_of_day % 60;
+
+   ptm->tm_isdst  = 0;
 
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
    ptm->tm_gmtoff = 0;
@@ -1430,7 +1448,8 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 
 
 /* ------------------------------------------------------------------------- *\
-   new_mktime is a mktime implementation
+   new_mktime is a mktime implementation that does not adjust any members of
+   the input struct as mktime does.
 \* ------------------------------------------------------------------------- */
 time_t new_mktime(const struct tm * ptm)
 {
@@ -1443,6 +1462,32 @@ time_t new_mktime(const struct tm * ptm)
       update_time_zone_info();
 
    t_ret = mktime_of_zone(ptm, &ti);
+
+   if(pta_unlock)
+      pta_unlock(pv_lock_context);
+
+   return(t_ret);
+} /* time_t new_mktime(struct tm * ptm) */
+
+
+/* ------------------------------------------------------------------------- *\
+   std_mktime is a mktime implementation that adjust the members of the
+   input struct as the C standard requires.
+\* ------------------------------------------------------------------------- */
+time_t std_mktime(struct tm * ptm)
+{
+   time_t t_ret;
+
+   if(pta_lock)
+      pta_lock(pv_lock_context);
+
+   if(!ti.type)
+      update_time_zone_info();
+
+   t_ret = mktime_of_zone(ptm, &ti);
+
+   if((t_ret != (time_t) -1) || !errno)
+       localtime_of_zone(t_ret, ptm, &ti);
 
    if(pta_unlock)
       pta_unlock(pv_lock_context);

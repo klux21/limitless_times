@@ -147,21 +147,28 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm);
 #define gmtime_r   new_gmtime_r
 
 /* ------------------------------------------------------------------------- *\
-   new_mkgmtime is a mkgmtime (timegm) implementation
+   new_mkgmtime is a timegm (mkgmtime) implementation that does not adjust
+   any members of the input struct as timegm (mkgmtime) does.
 \* ------------------------------------------------------------------------- */
-time_t new_mkgmtime(const struct tm * ptm);
+time_t new_timegm(const struct tm * ptm);
+
+/* ------------------------------------------------------------------------- *\
+   std_timegm is a timegm (mkgmtime) implementation that adjusts the members
+   of the input struct as the C standard requires.
+\* ------------------------------------------------------------------------- */
+time_t std_timegm(struct tm * ptm);
 
 #ifdef mkgmtime
 #undef mkgmtime
 #endif
 
-#define mkgmtime   new_mkgmtime
+#define mkgmtime   std_timegm
 
 #ifdef timegm
 #undef timegm
 #endif
 
-#define timegm   new_mkgmtime
+#define timegm   std_timegm
 
 
 /* ------------------------------------------------------------------------- *\
@@ -175,15 +182,22 @@ time_t new_mkgmtime(const struct tm * ptm);
 void update_time_zone_info();
 
 /* ------------------------------------------------------------------------- *\
-   new_mktime is a mktime implementation
+   new_mktime is a mktime implementation that does not adjust any members of
+   the input struct as mktime does.
 \* ------------------------------------------------------------------------- */
 time_t new_mktime(const struct tm * ptm);
+
+/* ------------------------------------------------------------------------- *\
+   std_mktime is a mktime implementation that adjusts the members of the
+   input struct as the C standard requires.
+\* ------------------------------------------------------------------------- */
+time_t std_mktime(struct tm * ptm);
 
 #ifdef mktime
 #undef mktime
 #endif
 
-#define mktime    new_mktime
+#define mktime    std_mktime
 
 /* ------------------------------------------------------------------------- *\
    new_localtime_r multithreading safe version of localtime

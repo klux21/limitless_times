@@ -1493,7 +1493,7 @@ time_t std_mktime(struct tm * ptm)
       pta_unlock(pv_lock_context);
 
    return(t_ret);
-} /* time_t new_mktime(struct tm * ptm) */
+} /* time_t std_mktime(struct tm * ptm) */
 
 
 /* ------------------------------------------------------------------------- *\

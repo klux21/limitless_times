@@ -755,7 +755,7 @@ int test_new_gmtime_r()
     10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
     11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11 };
 
-   time_t t = (-((int64_t)719528 + 146097 + 146097) * 86400); /* year 400 bc */
+   time_t t = (-((int64_t)719528 + 146097 + 146097) * 86400); /* year 800 bc */
    struct tm stm;
    struct tm * ptm;
    int32_t   wday = 6;
@@ -825,6 +825,54 @@ int test_new_gmtime_r()
 
       if (t != new_timegm(ptm))
          goto Exit;
+
+      {
+         struct tm tm1;
+         struct tm tm2;
+
+         memset(&tm1, 0, sizeof(tm1));
+         tm1.tm_year = ptm->tm_year;
+         tm1.tm_mon  = ptm->tm_mon;
+         tm1.tm_mday = ptm->tm_mday;
+         tm1.tm_hour = ptm->tm_hour;
+         tm1.tm_min  = ptm->tm_min;
+         tm1.tm_sec  = ptm->tm_sec;
+
+         if ((t != std_timegm(&tm1)) || memcmp(ptm, &tm1, sizeof(*ptm)))
+         {
+            fprintf (stderr, "std_timegm adjusted the struct memmbers invalid for time_t %ld (0x%lx)!\n"
+                     "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                     (long) t, (long) t,
+                     tm1.tm_year + 1900,  tm1.tm_mon+1,  tm1.tm_mday,  tm1.tm_hour,  tm1.tm_min,  tm1.tm_sec,  tm1.tm_yday,  tm1.tm_isdst,  tm1.tm_wday,
+                     ptm->tm_year + 1900, ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, ptm->tm_yday, ptm->tm_isdst, ptm->tm_wday );
+
+            goto Exit;
+         }
+
+         memset(&tm1, 0, sizeof(tm1));
+         memset(&tm2, 0, sizeof(tm2));
+
+         new_localtime_r(&t, &tm2);
+
+         tm1.tm_year  = tm2.tm_year;
+         tm1.tm_mon   = tm2.tm_mon;
+         tm1.tm_mday  = tm2.tm_mday;
+         tm1.tm_hour  = tm2.tm_hour;
+         tm1.tm_min   = tm2.tm_min;
+         tm1.tm_sec   = tm2.tm_sec;
+         tm1.tm_isdst = tm2.tm_isdst; /* without this mktime may guess a wrong hour when switching to daylight saving or back */
+
+         if ((t != std_mktime(&tm1)) || memcmp(&tm2, &tm1, sizeof(tm2)))
+         {
+            fprintf (stderr, "std_mktime adjusted the struct memmbers invalid for time_t %ld (0x%lx)!\n"
+                     "(%.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d) != %.4d/%.2d/%.2d %.2d:%.2d:%.2d (yd=%d dst=%d wd=%d))\n",
+                     (long) t, (long) t,
+                     tm1.tm_year + 1900, tm1.tm_mon+1, tm1.tm_mday, tm1.tm_hour, tm1.tm_min, tm1.tm_sec, tm1.tm_yday, tm1.tm_isdst, tm1.tm_wday,
+                     tm2.tm_year + 1900, tm2.tm_mon+1, tm2.tm_mday, tm2.tm_hour, tm2.tm_min, tm2.tm_sec, tm2.tm_yday, tm2.tm_isdst, tm2.tm_wday);
+
+            goto Exit;
+         }
+      }
 
       ++t;
       if (++sec == 60)
@@ -999,6 +1047,15 @@ int main(int argc, char * argv[])
 
    if(!test_conversions())
       goto Exit;
+
+#ifndef _WIN32
+   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+#else
+   putenv("TZ=CET-1CEST,M3.5.0,M10.5.0/3");
+#endif
+
+   tzset();
+   update_time_zone_info();
 
    if (!test_new_gmtime_r())
       goto Exit;

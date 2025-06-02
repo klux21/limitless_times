@@ -80,6 +80,7 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . -I zones test_times.c tim
 #include <stdlib.h> /* setenv */
 #include <stdio.h>
 #include <string.h> /* memset */
+#include <errno.h>
 #include <inttypes.h>
 
 #ifndef _WIN32
@@ -767,6 +768,8 @@ int test_new_gmtime_r()
    int       min  = 0;
    int       hour = 0;
 
+   errno = EAGAIN;
+
    while (year < 3201)
    {
       ptm = new_gmtime_r(&t, &stm);
@@ -893,6 +896,14 @@ int test_new_gmtime_r()
 
       t += 86400; /* next day */
    }
+
+   if(errno != EAGAIN)
+   { /* errno should not be set to any kind of a new value within our test loop */
+      fprintf(stderr, "errno did change unexpectedly from %d (EAGAIN) to %d (%s)\n", (int) EAGAIN, (int) errno, strerror (errno));
+      goto Exit;
+   }
+
+   errno = 0;
 
    bRet = 1;
 Exit:;

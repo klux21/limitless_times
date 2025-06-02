@@ -473,8 +473,24 @@ time_t std_timegm(struct tm * ptm)
 {
    time_t t_ret = new_timegm(ptm);
 
-   if((t_ret != (time_t) -1) || !errno)
-       new_gmtime_r(&t_ret, ptm);
+   if(t_ret != (time_t) -1)
+   {
+      new_gmtime_r(&t_ret, ptm);
+   }
+   else
+   { /* We must not call new_gmtime_r after a conversion error and
+        preserve errno if there was no conversion error. */
+
+      int err = errno;
+      errno = 0;
+
+      t_ret = new_timegm(ptm);
+
+      if(!errno)
+         new_gmtime_r(&t_ret, ptm);
+      else
+         errno = err;
+   }
 
    return(t_ret);
 } /* time_t std_timegm(struct tm * ptm) */
@@ -1486,8 +1502,24 @@ time_t std_mktime(struct tm * ptm)
 
    t_ret = mktime_of_zone(ptm, &ti);
 
-   if((t_ret != (time_t) -1) || !errno)
-       localtime_of_zone(t_ret, ptm, &ti);
+   if(t_ret != (time_t) -1)
+   {
+      localtime_of_zone(t_ret, ptm, &ti);
+   }
+   else
+   { /* We must not call localtime_of_zoner after a conversion error and
+        preserve errno if there was no conversion error. */
+
+      int err = errno;
+      errno = 0;
+
+      t_ret = mktime_of_zone(ptm, &ti);
+
+      if(!errno)
+         localtime_of_zone(t_ret, ptm, &ti);
+      else
+         errno = err;
+   }
 
    if(pta_unlock)
       pta_unlock(pv_lock_context);

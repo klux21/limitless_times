@@ -8,7 +8,7 @@
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
-*  COPYRIGHT:    (c) 2024 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
+*  COPYRIGHT:    (c) 2025 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
@@ -149,7 +149,7 @@ int64_t unix_time()
    tRet = (int64_t) tv.tv_sec;
 
    /* Try to turn the year 2038 problem into a year 2106 problem. */
-   if((sizeof(time_t) <= 4) && (tv.tv_sec < 0))
+   if((sizeof(tv.tv_sec) <= 4) && (tv.tv_sec < 0))
       tRet += (int64_t) 0x80000000ul + (int64_t) 0x80000000ul;
 
    tRet *= 1000000ul;
@@ -279,7 +279,7 @@ int week_of_year(int year, int month, int day)
 {
    int kw_ret = 0;
    struct tm stm;
-   time_t timestamp;
+   time64_t timestamp;
 
    memset(&stm, 0, sizeof(stm)); /* clear data */
 
@@ -295,7 +295,7 @@ int week_of_year(int year, int month, int day)
    stm.tm_hour = 11;
 
    timestamp = new_timegm(&stm);
-   new_gmtime_r(&timestamp, &stm);
+   new_gmtime_r(timestamp, &stm);
 
    kw_ret = calendar_week_of_year(&stm);
 
@@ -306,17 +306,17 @@ int week_of_year(int year, int month, int day)
 /* ------------------------------------------------------------------------- *\
    calendar_week_of_time returns the calender week of the year for a time_t
 \* ------------------------------------------------------------------------- */
-int calendar_week_of_time(time_t tt)
+int calendar_week_of_time(time64_t tt)
 {
    int kw_ret = 0;
    struct tm stm;
 
    memset(&stm, 0, sizeof(stm));
-   new_gmtime_r(&tt, &stm);
+   new_gmtime_r(tt, &stm);
    kw_ret = calendar_week_of_year(&stm);
 
    return (kw_ret);
-} /* int calendar_week_of_time(time_t tt) */
+} /* int calendar_week_of_time(time64_t tt) */
 
 /* ------------------------------------------------------------------------- *\
    Helper arrays for faster calculations
@@ -336,7 +336,7 @@ static const uint8_t  weekday_of_month_start_ly[12]  = {  0,  3,  4,  0,   2,   
    new_timegm is a timegm (mkgmtime) implementation that does not adjust
    any members of the input struct as timegm (mkgmtime) does.
 \* ------------------------------------------------------------------------- */
-time_t new_timegm(const struct tm * ptm)
+time64_t new_timegm(const struct tm * ptm)
 {
    int64_t tt = -1;
    int64_t year;
@@ -452,16 +452,9 @@ time_t new_timegm(const struct tm * ptm)
    tt += (int64_t) time_of_year;
    tt -= (int64_t) 719528 * 86400; /* subtract the time from 1/1/0000 until 1/1/1970 */
 
-   if(tt != (time_t) tt)
-   { /* handle overflow of 32 bit time_t values */
-      tt = -1;
-      errno = ERANGE;
-      goto Exit;
-   }
-
    Exit:;
-   return ((time_t) tt);
-} /* time_t new_timegm(struct tm * ptm) */
+   return ((time64_t) tt);
+} /* time64_t new_timegm(struct tm * ptm) */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -471,11 +464,19 @@ time_t new_timegm(const struct tm * ptm)
 
 time_t std_timegm(struct tm * ptm)
 {
-   time_t t_ret = new_timegm(ptm);
+   time64_t t_ret = new_timegm(ptm);
 
    if(t_ret != (time_t) -1)
    {
-      new_gmtime_r(&t_ret, ptm);
+      if (t_ret != (time_t) t_ret)
+      { /* handle overflow of 32 bit time_t values */
+         t_ret = -1;
+         errno = ERANGE;
+      }
+      else
+      {
+         new_gmtime_r(t_ret, ptm);
+      }
    }
    else
    { /* We must not call new_gmtime_r after a conversion error and
@@ -487,12 +488,12 @@ time_t std_timegm(struct tm * ptm)
       t_ret = new_timegm(ptm);
 
       if(!errno)
-         new_gmtime_r(&t_ret, ptm);
+         new_gmtime_r(t_ret, ptm);
       else
          errno = err;
    }
 
-   return(t_ret);
+   return((time_t) t_ret);
 } /* time_t std_timegm(struct tm * ptm) */
 
 
@@ -509,7 +510,7 @@ time_t std_timegm(struct tm * ptm)
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
 \* ------------------------------------------------------------------------- */
-struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
+struct tm * new_gmtime_r(time64_t t, struct tm * ptm)
 {
    int64_t  time = 0; /* unix time in micro seconds */
    int64_t  year;
@@ -552,8 +553,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
       goto Exit; /* destination missing */
    }
 
-   if(pt)
-      time = (int64_t) *pt;
+   time = t;
 
    memset(ptm, 0, sizeof(*ptm));
 
@@ -666,7 +666,7 @@ struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm)
 
 Exit:;
    return (ptm);
-}/* new_gmtime_r */
+}/* struct tm * new_gmtime_r(time64_t t, struct tm * ptm) */
 
 
 static TIME_ZONE_INFO ti;   /* static time zone information as returned by the system functions */
@@ -1302,7 +1302,7 @@ void update_time_zone_info()
    mktime_of_zone is a thread safe mktime implementation for any timezone
    where the daylight saving rules are given in a struct TIME_ZONE_INFO
 \* ------------------------------------------------------------------------- */
-time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
+time64_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
    int64_t tt = -1;
    int32_t leap_year = 0;
@@ -1451,25 +1451,18 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi)
    tt += (int64_t) time_of_year;
    tt -= (int64_t) 719528 * 86400; /* subtract the time from 1/1/0000 to 1/1/1970 */
 
-   if(tt != (time_t) tt)
-   { /* handle overflow of 32 bit time_t values */
-      tt = -1;
-      errno = ERANGE;
-      goto Exit;
-   }
-
    Exit:;
-   return ((time_t) tt);
-} /* time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi) */
+   return ((time64_t) tt);
+} /* time64_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi) */
 
 
 /* ------------------------------------------------------------------------- *\
    new_mktime is a mktime implementation that does not adjust any members of
    the input struct as mktime does.
 \* ------------------------------------------------------------------------- */
-time_t new_mktime(const struct tm * ptm)
+time64_t new_mktime(const struct tm * ptm)
 {
-   time_t t_ret;
+   time64_t t_ret;
 
    if(pta_lock)
       pta_lock(pv_lock_context);
@@ -1483,7 +1476,7 @@ time_t new_mktime(const struct tm * ptm)
       pta_unlock(pv_lock_context);
 
    return(t_ret);
-} /* time_t new_mktime(struct tm * ptm) */
+} /* time64_t new_mktime(struct tm * ptm) */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -1492,7 +1485,7 @@ time_t new_mktime(const struct tm * ptm)
 \* ------------------------------------------------------------------------- */
 time_t std_mktime(struct tm * ptm)
 {
-   time_t t_ret;
+   time64_t t_ret;
 
    if(pta_lock)
       pta_lock(pv_lock_context);
@@ -1504,7 +1497,15 @@ time_t std_mktime(struct tm * ptm)
 
    if(t_ret != (time_t) -1)
    {
-      localtime_of_zone(t_ret, ptm, &ti);
+      if (t_ret != (time_t) t_ret)
+      { /* handle overflow of 32 bit time_t values */
+         t_ret = -1;
+         errno = ERANGE;
+      }
+      else
+      {
+         localtime_of_zone(t_ret, ptm, &ti);
+      }
    }
    else
    { /* We must not call localtime_of_zoner after a conversion error and
@@ -1524,7 +1525,7 @@ time_t std_mktime(struct tm * ptm)
    if(pta_unlock)
       pta_unlock(pv_lock_context);
 
-   return(t_ret);
+   return((time_t) t_ret);
 } /* time_t std_mktime(struct tm * ptm) */
 
 
@@ -1546,7 +1547,7 @@ time_t std_mktime(struct tm * ptm)
    In Posix 2024 systems ptm->tm_zone points to storage in the TIME_ZONE_INFO
    struct. It becomes invalid once the storage of ptzi is released or adjusted.
 \* ------------------------------------------------------------------------- */
-struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_INFO * ptzi)
+struct tm * localtime_of_zone(time64_t utc_time, struct tm * ptm, const TIME_ZONE_INFO * ptzi)
 {
    const   TIME_ZONE_RULE * ptz;
    int32_t isDaylightSaving = 0;
@@ -1659,7 +1660,7 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
 
    if(ptm)
    {
-      struct tm * ptm_ret = new_gmtime_r(&utc_time, ptm);
+      struct tm * ptm_ret = new_gmtime_r(utc_time, ptm);
       ptm->tm_isdst = isDaylightSaving; /* set summer time flag */
 
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
@@ -1671,7 +1672,7 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
    }
 
    return (ptm);
-}/* struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi) */
+}/* struct tm * localtime_of_zone(time64_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi) */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -1691,7 +1692,7 @@ struct tm * localtime_of_zone(time_t utc_time, struct tm * ptm, const TIME_ZONE_
    TIME_ZONE_INFO struct. It may change once TZ becomes adjusted after the
    call of new_localtime_r.
 \* ------------------------------------------------------------------------- */
-struct tm * new_localtime_r(const time_t * pt, struct tm * ptm)
+struct tm * new_localtime_r(time64_t t, struct tm * ptm)
 {
    struct tm * ptm_ret;
 
@@ -1701,13 +1702,13 @@ struct tm * new_localtime_r(const time_t * pt, struct tm * ptm)
    if(!ti.type)
       update_time_zone_info();
 
-   ptm_ret = localtime_of_zone(pt ? *pt : 0, ptm, &ti);
+   ptm_ret = localtime_of_zone(t, ptm, &ti);
 
    if(pta_unlock)
       pta_unlock(pv_lock_context);
 
    return (ptm_ret);
-} /* struct tm * new_localtime_r(const time_t * pt, struct tm * ptm) */
+} /* struct tm * new_localtime_r(time64_t t, struct tm * ptm) */
 
 
 /* ------------------------------------------------------------------------- *\

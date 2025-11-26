@@ -8,7 +8,7 @@
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
-*  COPYRIGHT:    (c) 2024 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
+*  COPYRIGHT:    (c) 2025 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
@@ -103,6 +103,12 @@ typedef int64_t time_t;  /* time value */
 extern "C" {
 #endif
 
+#ifndef time64_t
+/* define a 64bit time_t value */
+typedef int64_t time64_t;
+#define time64_t time64_t
+#endif
+
 /* ------------------------------------------------------------------------- *\
    unix_time returns the Unix time in microsecond.
    (UTC time since 01/01/1970) The precision depends on the system.
@@ -122,7 +128,7 @@ int calendar_week_of_year(const struct tm * ptm);
 /* ------------------------------------------------------------------------- *\
    calendar_week_of_time returns the calender week of the year for a time_t
 \* ------------------------------------------------------------------------- */
-int calendar_week_of_time(time_t tt);
+int calendar_week_of_time(time64_t tt);
 
 
 /* ------------------------------------------------------------------------- *\
@@ -138,19 +144,19 @@ int calendar_week_of_time(time_t tt);
             ptm->year + 1900, ptm->year < -1900 ? " BC" : "");
    ...
 \* ------------------------------------------------------------------------- */
-struct tm * new_gmtime_r(const time_t * pt, struct tm * ptm);
+struct tm * new_gmtime_r(time64_t t, struct tm * ptm);
 
 #ifdef gmtime_r
 #undef gmtime_r
 #endif
 
-#define gmtime_r   new_gmtime_r
+#define gmtime_r(t, ptm)   new_gmtime_r(*(time_t*)(t), ptm)
 
 /* ------------------------------------------------------------------------- *\
    new_mkgmtime is a timegm (mkgmtime) implementation that does not adjust
    any members of the input struct as timegm (mkgmtime) does.
 \* ------------------------------------------------------------------------- */
-time_t new_timegm(const struct tm * ptm);
+time64_t new_timegm(const struct tm * ptm);
 
 /* ------------------------------------------------------------------------- *\
    std_timegm is a timegm (mkgmtime) implementation that adjusts the members
@@ -185,7 +191,7 @@ void update_time_zone_info();
    new_mktime is a mktime implementation that does not adjust any members of
    the input struct as mktime does.
 \* ------------------------------------------------------------------------- */
-time_t new_mktime(const struct tm * ptm);
+time64_t new_mktime(const struct tm * ptm);
 
 /* ------------------------------------------------------------------------- *\
    std_mktime is a mktime implementation that adjusts the members of the
@@ -216,13 +222,13 @@ time_t std_mktime(struct tm * ptm);
    TIME_ZONE_INFO struct. It may change once TZ becomes adjusted after the
    call of new_localtime_r.
 \* ------------------------------------------------------------------------- */
-struct tm * new_localtime_r(const time_t * pt, struct tm * ptm);
+struct tm * new_localtime_r(time64_t t, struct tm * ptm);
 
 #ifdef localtime_r
 #undef localtime_r
 #endif
 
-#define localtime_r   new_localtime_r
+#define localtime_r(t, ptm)   new_localtime_r(*(time_t*)(t), ptm)
 
 
 /* ========================================================================= *\
@@ -275,7 +281,7 @@ int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);
    mktime_of_zone is a thread safe mktime implementation for any timezone
    where the daylight saving rules are given in a struct TIME_ZONE_INFO
 \* ------------------------------------------------------------------------- */
-time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi);
+time64_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi);
 
 
 /* ------------------------------------------------------------------------- *\
@@ -296,7 +302,7 @@ time_t mktime_of_zone(const struct tm * ptm, const TIME_ZONE_INFO * ptzi);
    In Posix 2024 systems ptm->tm_zone points to storage in the TIME_ZONE_INFO
    struct. It becomes invalid once the storage of ptzi is released or adjusted.
 \* ------------------------------------------------------------------------- */
-struct tm * localtime_of_zone(time_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi);
+struct tm * localtime_of_zone(time64_t t, struct tm * ptm, const TIME_ZONE_INFO * ptzi);
 
 
 /* ------------------------------------------------------------------------- *\

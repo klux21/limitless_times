@@ -13,7 +13,7 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . -I zones test_times.c tim
 * --------------------------------------------------------------------------- *
 *                                                                             *
 *                                                                             *
-*  COPYRIGHT:    (c) 2024 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
+*  COPYRIGHT:    (c) 2025 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
@@ -360,7 +360,7 @@ int test_speed()
    i  = 1000000;
    t0 = unix_time();
    while (i--)
-      new_gmtime_r(&tt, &stm);
+      new_gmtime_r(tt, &stm);
    t1 = unix_time() - t0;
    fprintf(stdout, "An average _____ new_gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
@@ -401,7 +401,7 @@ int test_speed()
    i  = 1000000;
    t0 = unix_time();
    while (i--)
-      new_localtime_r(&tt, &stm);
+      new_localtime_r(tt, &stm);
    t1 = unix_time() - t0;
    fprintf(stdout, "An average __ new_localtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
@@ -474,7 +474,7 @@ int test_conversions()
    i = 200000;
    while(i--)
    {
-      new_localtime_r(&t, &stm);
+      new_localtime_r(t, &stm);
       localtime_r(&t, &otm);
 
       if(   (otm.tm_year  != stm.tm_year)
@@ -522,7 +522,7 @@ int test_conversions()
    i = 200000;
    while(i--)
    {
-      new_localtime_r(&t, &stm);
+      new_localtime_r(t, &stm);
       localtime_r(&t, &otm);
 
       if(   (otm.tm_year  != stm.tm_year)
@@ -570,7 +570,7 @@ int test_conversions()
    i = 200000;
    while(i--)
    {
-      new_localtime_r(&t, &stm);
+      new_localtime_r(t, &stm);
       localtime_r(&t, &otm);
 
       if(   (otm.tm_year  != stm.tm_year)
@@ -618,7 +618,7 @@ int test_conversions()
    i = 200000;
    while(i--)
    {
-      new_localtime_r(&t, &stm);
+      new_localtime_r(t, &stm);
       localtime_r(&t, &otm);
 
       if(   (otm.tm_year  != stm.tm_year)
@@ -666,7 +666,7 @@ int test_conversions()
    i = 200000;
    while(i--)
    {
-      new_localtime_r(&t, &stm);
+      new_localtime_r(t, &stm);
       localtime_r(&t, &otm);
 
       if(   (otm.tm_year  != stm.tm_year)
@@ -772,7 +772,7 @@ int test_new_gmtime_r()
 
    while (year < 3201)
    {
-      ptm = new_gmtime_r(&t, &stm);
+      ptm = new_gmtime_r(t, &stm);
       if (!ptm)
          goto Exit;
 
@@ -855,7 +855,7 @@ int test_new_gmtime_r()
          memset(&tm1, 0, sizeof(tm1));
          memset(&tm2, 0, sizeof(tm2));
 
-         new_localtime_r(&t, &tm2);
+         new_localtime_r(t, &tm2);
 
          tm1.tm_year  = tm2.tm_year;
          tm1.tm_mon   = tm2.tm_mon;

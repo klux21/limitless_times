@@ -160,7 +160,7 @@ int64_t unix_time()
 
 
 /* ========================================================================= *\
-   Thread safety helpers
+   Thread safety helpers for the time functions
 \* ========================================================================= */
 
 /* ------------------------------------------------------------------------- *\
@@ -453,6 +453,7 @@ time64_t new_timegm(const struct tm * ptm)
    tt -= (int64_t) 719528 * 86400; /* subtract the time from 1/1/0000 until 1/1/1970 */
 
    Exit:;
+
    return ((time64_t) tt);
 } /* time64_t new_timegm(struct tm * ptm) */
 

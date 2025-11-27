@@ -86,16 +86,9 @@
 #include <windows.h>
 #include <winbase.h>
 
-#if !defined(_TIME64_T_DEFINED) && !defined(time64_t)
-/* define a 64bit time_t value */
-typedef int64_t time64_t;
-#define time64_t time64_t
-#define _TIME64_T_DEFINED  /* avoid multiple def's of time_t */
-#endif
-
 #if !defined(_TIME_T_DEFINED) && !defined(time_t)
-typedef time64_t time_t;  /* time value */
-#define time_t  time_t   /* time value */
+typedef int64_t time_t;  /* Unix time value */
+#define time_t  time_t
 #define _TIME_T_DEFINED  /* avoid multiple def's of time_t */
 #endif
 
@@ -106,20 +99,13 @@ typedef time64_t time_t;  /* time value */
 #include <windows.h>  /* required for struct timeval and LPFILETIME */
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if !defined(_TIME64_T_DEFINED) && !defined(time64_t)
-/* define a 64bit time_t value */
-typedef int64_t time64_t;
-#define time64_t time64_t
-#define _TIME64_T_DEFINED  /* avoid multiple def's of time_t */
-#endif
 #ifndef time64_t
 /* define a 64bit time_t value */
-typedef int64_t time64_t;
+typedef int64_t  time64_t;
 #define time64_t time64_t
 #endif
 

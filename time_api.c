@@ -513,7 +513,7 @@ time_t std_timegm(struct tm * ptm)
 \* ------------------------------------------------------------------------- */
 struct tm * new_gmtime_r(time64_t t, struct tm * ptm)
 {
-   int64_t  time = 0; /* unix time in micro seconds */
+   int64_t  time = t; /* unix time in micro seconds */
    int64_t  year;
    uint32_t day;
    uint32_t time_of_day;
@@ -553,8 +553,6 @@ struct tm * new_gmtime_r(time64_t t, struct tm * ptm)
       errno = EINVAL;
       goto Exit; /* destination missing */
    }
-
-   time = t;
 
    memset(ptm, 0, sizeof(*ptm));
 

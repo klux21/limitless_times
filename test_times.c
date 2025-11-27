@@ -285,7 +285,7 @@ int test_speed()
    i = 1000000;
    t0 = unix_time();
    while (i--)
-      tt = std_timegm(&stm);
+      tt = timegm(&stm);
    t1 = unix_time() - t0;
    fprintf(stdout, "An average _______ std_timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 

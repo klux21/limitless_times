@@ -463,21 +463,13 @@ time64_t new_timegm(const struct tm * ptm)
    of the input struct as the C standard requires.
 \* ------------------------------------------------------------------------- */
 
-time_t std_timegm(struct tm * ptm)
+time64_t std_timegm(struct tm * ptm)
 {
    time64_t t_ret = new_timegm(ptm);
 
-   if(t_ret != (time_t) -1)
+   if(t_ret != (time64_t) -1)
    {
-      if (t_ret != (time_t) t_ret)
-      { /* handle overflow of 32 bit time_t values */
-         t_ret = -1;
-         errno = ERANGE;
-      }
-      else
-      {
-         new_gmtime_r(t_ret, ptm);
-      }
+      new_gmtime_r(t_ret, ptm);
    }
    else
    { /* We must not call new_gmtime_r after a conversion error and
@@ -494,8 +486,8 @@ time_t std_timegm(struct tm * ptm)
          errno = err;
    }
 
-   return((time_t) t_ret);
-} /* time_t std_timegm(struct tm * ptm) */
+   return( t_ret);
+} /* time64_t std_timegm(struct tm * ptm) */
 
 
 /* ------------------------------------------------------------------------- *\
@@ -1482,7 +1474,7 @@ time64_t new_mktime(const struct tm * ptm)
    std_mktime is a mktime implementation that adjust the members of the
    input struct as the C standard requires.
 \* ------------------------------------------------------------------------- */
-time_t std_mktime(struct tm * ptm)
+time64_t std_mktime(struct tm * ptm)
 {
    time64_t t_ret;
 
@@ -1494,17 +1486,9 @@ time_t std_mktime(struct tm * ptm)
 
    t_ret = mktime_of_zone(ptm, &ti);
 
-   if(t_ret != (time_t) -1)
+   if(t_ret != (time64_t) -1)
    {
-      if (t_ret != (time_t) t_ret)
-      { /* handle overflow of 32 bit time_t values */
-         t_ret = -1;
-         errno = ERANGE;
-      }
-      else
-      {
-         localtime_of_zone(t_ret, ptm, &ti);
-      }
+      localtime_of_zone(t_ret, ptm, &ti);
    }
    else
    { /* We must not call localtime_of_zoner after a conversion error and
@@ -1524,8 +1508,8 @@ time_t std_mktime(struct tm * ptm)
    if(pta_unlock)
       pta_unlock(pv_lock_context);
 
-   return((time_t) t_ret);
-} /* time_t std_mktime(struct tm * ptm) */
+   return(t_ret);
+} /* time64_t std_mktime(struct tm * ptm) */
 
 
 /* ------------------------------------------------------------------------- *\

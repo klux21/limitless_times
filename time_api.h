@@ -164,7 +164,7 @@ struct tm * new_gmtime_r(time64_t t, struct tm * ptm);
 #undef gmtime_r
 #endif
 
-#define gmtime_r(t, ptm)   new_gmtime_r(*(time_t*)(t), ptm)
+#define gmtime_r(t, ptm)   new_gmtime_r(*(t), ptm)
 
 /* ------------------------------------------------------------------------- *\
    new_mkgmtime is a timegm (mkgmtime) implementation that does not adjust
@@ -242,7 +242,7 @@ struct tm * new_localtime_r(time64_t t, struct tm * ptm);
 #undef localtime_r
 #endif
 
-#define localtime_r(t, ptm)   new_localtime_r(*(time_t*)(t), ptm)
+#define localtime_r(t, ptm)   new_localtime_r(*(t), ptm)
 
 
 /* ========================================================================= *\

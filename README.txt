@@ -36,6 +36,13 @@ zone during at random times once your process is running you may provide an
 own mutex lock and unlock function for init_time_api_lock() and rely on the
 functions provided by this API.
 
+Since version 2.1 only time64_t instead of time_t values are used. This may
+hopefully issue compiler warnings if a 32 bit time_t is used for storing the
+return value of the mktime() or timegm() call and should help to prevent
+possible year 2038 problems. The macros for replacing gmtime_r and localtime_r
+are dereferencing the pointers outside of the function calls now and are able
+to handle 32 bit and 64 bit input values now.
+
 The support of the daylight saving rules is not that funny to implement but
 the functions new_mktime and new localtime_r here should handle them right as
 long as the environment variable TZ is set correctly.
@@ -47,7 +54,7 @@ file only. This works in Linux and BSD but does not care about the big bunch
 of the historical time offsets and daylight saving rules.
 Of course I doubt that any of us will go back in time for enjoying those old
 days again and for this it shouldn't be a big problem for most developers.
-Be aware that the provided functions don't care about any leap seconds as well.
+Be aware that the provided functions don't care about any leap seconds.
 Those are applied at random times for adjusting the timegap between the very
 local Gregorian time and the UTC time but a Gregorian year has an even bigger
 deviation from an average tropical year either and leap seconds can't fix the
@@ -56,10 +63,10 @@ The Unix standard says that "As represented in seconds since the Epoch, each
 and every day shall be accounted for by exactly 86400 seconds."
 ( https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_16 )
 For this leap seconds are usually ignored and I guess it's pretty OK to do
-so as well. A Gregorian year lasts currently a bit longer than a tropical year
-either and in a few ten thousend years after the earth rotation has slowed down
-a bit more the time will match again and for this it seems rather an academic
-problem of a nitpicker if somebody has a problem with that.
+so. A Gregorian year lasts currently a bit longer than a tropical year either
+and in a few ten thousend years after the earth rotation has slowed down a bit
+more the times will match again either and it seems rather an academic problem
+of nitpickers if someone has problems with that.
 
 For testing the functions and comparing the speed with the compiler build-in
 functions you may execute the test_times.c right as a shell script in a Linux

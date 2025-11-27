@@ -86,12 +86,6 @@
 #include <windows.h>
 #include <winbase.h>
 
-#if !defined(_TIME_T_DEFINED) && !defined(time_t)
-typedef int64_t time_t;  /* Unix time value */
-#define time_t  time_t
-#define _TIME_T_DEFINED  /* avoid multiple def's of time_t */
-#endif
-
 #pragma warning(disable : 4204)
 #endif /* _WIN32 */
 
@@ -130,7 +124,6 @@ int calendar_week_of_year(const struct tm * ptm);
 \* ------------------------------------------------------------------------- */
 int calendar_week_of_time(time64_t tt);
 
-
 /* ------------------------------------------------------------------------- *\
    new_gmtime_r an own implementation of gmtime_r
 
@@ -162,7 +155,7 @@ time64_t new_timegm(const struct tm * ptm);
    std_timegm is a timegm (mkgmtime) implementation that adjusts the members
    of the input struct as the C standard requires.
 \* ------------------------------------------------------------------------- */
-time_t std_timegm(struct tm * ptm);
+time64_t std_timegm(struct tm * ptm);
 
 #ifdef mkgmtime
 #undef mkgmtime
@@ -197,7 +190,7 @@ time64_t new_mktime(const struct tm * ptm);
    std_mktime is a mktime implementation that adjusts the members of the
    input struct as the C standard requires.
 \* ------------------------------------------------------------------------- */
-time_t std_mktime(struct tm * ptm);
+time64_t std_mktime(struct tm * ptm);
 
 #ifdef mktime
 #undef mktime

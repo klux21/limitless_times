@@ -106,7 +106,7 @@ int test_time_range()
        int d = 0;
        struct tm ti;
        struct tm stm;
-       time_t t;
+       time64_t t;
 
        memset(&stm, 0, sizeof(stm));
        memset(&ti, 0, sizeof(ti));
@@ -118,7 +118,7 @@ int test_time_range()
        ti.tm_sec   = 59;
        ti.tm_isdst = -1;
 
-       t = mkgmtime(&ti);
+       t = new_timegm(&ti);
 
        if((t - 3600) != mktime(&ti))
        {
@@ -201,7 +201,7 @@ int test_time_range()
    Exit:;
 
    if(!bRet)
-       fprintf(stderr, "Test conversion tests have failed!\n\n");
+       fprintf(stderr, "Time conversion tests have failed!\n\n");
    else
        fprintf(stdout, "Time conversion tests of the years 20001 BC til 20000 AD  passed!\n\n");
    return(bRet);

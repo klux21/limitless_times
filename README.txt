@@ -37,11 +37,11 @@ own mutex lock and unlock function for init_time_api_lock() and rely on the
 functions provided by this API.
 
 Since version 2.1 only time64_t instead of time_t values are used. This should
-cause a compiler warnings if a 32 bit time_t is used for storing the return
+cause compiler warnings if a 32 bit time_t is used for storing the return
 value of a mktime() or timegm() call and should help to prevent year 2038
 problems. The macros for replacing gmtime_r and localtime_r are dereferencing
 the pointers outside of the function calls now and are able to handle 32 bit
-and 64 bit input pointer values now. Of course the best fix of the year 2038
+and 64 bit input pointer values now. Of course the best fix of year 2038
 problems is to use 64 bit software or at least 64 bit time_t values only.
 
 The support of the daylight saving rules is not that funny to implement but

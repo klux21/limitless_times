@@ -79,6 +79,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <stddef.h>
+#include <time.h>      /* struct tm and localtime_r */
+#include <sys/types.h>
+
 #ifdef _WIN32
 #pragma warning(disable : 4100 4127)
 #include <io.h>
@@ -92,8 +96,21 @@
 #endif
 #endif/* #ifdef _WIN32 */
 
+#ifdef _WIN32
+#include <winsock2.h>  /* required for timeval struct */
+#include <WS2tcpip.h>  /* for IPv6 related stuff */
+#include <windows.h>
+#include <winbase.h>
+
+#pragma warning(disable : 4204)
+#endif /* _WIN32 */
+
+#ifdef __CYGWIN__
+#include <windows.h>  /* required for struct timeval and LPFILETIME */
+#endif
+
+
 #include <time_api.h>
-#include <tz_value.h>
 
 
 #if defined (_WIN32) || defined (__CYGWIN__)

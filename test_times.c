@@ -82,10 +82,22 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . -I zones test_times.c tim
 #include <string.h> /* memset */
 #include <errno.h>
 #include <inttypes.h>
+#include <stddef.h>
+#include <time.h>      /* struct tm and localtime_r */
+#include <sys/types.h>
 
 #ifndef _WIN32
 #include <sys/time.h>
 #endif
+
+#ifdef _WIN32
+#include <winsock2.h>  /* required for timeval struct */
+#include <WS2tcpip.h>  /* for IPv6 related stuff */
+#include <windows.h>
+#include <winbase.h>
+
+#pragma warning(disable : 4204)
+#endif /* _WIN32 */
 
 #include <time_api.h>
 #include <tz_value.h>
@@ -213,6 +225,7 @@ int test_time_range()
    and new_gmtime_r and the system implementations.
 \* ------------------------------------------------------------------------- */
 
+/* undefine our wrappers in time_api.h */
 #undef timegm
 #undef mktime
 #undef mkgmtime
@@ -222,6 +235,7 @@ int test_time_range()
 
 #ifdef _WIN32
 #define mkgmtime _mkgmtime
+//#define timegm   mkgmtime
 
 /* gmtime and localtime are threadsafe implemented in Windows */
 struct tm * gmtime_r(const time_t * pt, struct tm * ptm)
@@ -285,7 +299,7 @@ int test_speed()
    i = 1000000;
    t0 = unix_time();
    while (i--)
-      tt = timegm(&stm);
+      tt = std_timegm(&stm);
    t1 = unix_time() - t0;
    fprintf(stdout, "An average _______ std_timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
@@ -300,7 +314,7 @@ int test_speed()
    while (i--)
       tt = new_timegm(&stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average _______ new_timegm() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average _______ new_timegm() call took %ld.%.6ld us\n\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if (ot != tt)
    {
@@ -342,7 +356,7 @@ int test_speed()
       tt = new_mktime(&stm);
    }
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average _______ new_mktime() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average _______ new_mktime() call took %ld.%.6ld us\n\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
    if (ot != tt)
    {
@@ -362,7 +376,7 @@ int test_speed()
    while (i--)
       new_gmtime_r(tt, &stm);
    t1 = unix_time() - t0;
-   fprintf(stdout, "An average _____ new_gmtime_r() call took %ld.%.6ld us\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
+   fprintf(stdout, "An average _____ new_gmtime_r() call took %ld.%.6ld us\n\n", (long)(t1 / 1000000), (long)(t1 % 1000000));
 
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))
    if ((otm.tm_gmtoff != stm.tm_gmtoff) ||

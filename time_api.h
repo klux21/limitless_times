@@ -75,23 +75,7 @@
 #ifndef TIME_API_H
 #define TIME_API_H
 
-#include <stddef.h>
-#include <time.h>      /* struct tm and localtime_r */
-#include <sys/types.h>
 #include <stdint.h>    /* int64_t etc. */
-
-#ifdef _WIN32
-#include <winsock2.h>  /* required for timeval struct */
-#include <WS2tcpip.h>  /* for IPv6 related stuff */
-#include <windows.h>
-#include <winbase.h>
-
-#pragma warning(disable : 4204)
-#endif /* _WIN32 */
-
-#ifdef __CYGWIN__
-#include <windows.h>  /* required for struct timeval and LPFILETIME */
-#endif
 
 #ifdef __cplusplus
 extern "C" {

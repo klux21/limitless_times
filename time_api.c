@@ -89,6 +89,7 @@
 #else
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/times.h>
 
 #ifdef __CYGWIN__
 #include <windows.h>

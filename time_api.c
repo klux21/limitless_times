@@ -8,7 +8,7 @@
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
-*  COPYRIGHT:    (c) 2025 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
+*  COPYRIGHT:    (c) 2026 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
@@ -80,7 +80,6 @@
 #include <stdlib.h>
 
 #include <stddef.h>
-#include <time.h>      /* struct tm and localtime_r */
 #include <sys/types.h>
 
 #ifdef _WIN32
@@ -1091,22 +1090,22 @@ int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
       Please check the unix standard for the format description. */
 
    if(!read_TZ_zone_data (&zi.standard, 0 /* STD time */, ps, &ps))
-       goto Exit; /* TZ format error :o( */
+      goto Exit; /* TZ format error :o( */
 
    zi.type = 1; /* standard time if there is no following data */
 
    if(read_TZ_zone_data (&zi.daylight, 1 /* STD time */, ps, &ps))
    {
-       if(zi.daylight.bias == 0x7fffffff)
-          zi.daylight.bias = zi.standard.bias - 3600;
+      if(zi.daylight.bias == 0x7fffffff)
+         zi.daylight.bias = zi.standard.bias - 3600;
 
-       if(!read_TZ_rules (&zi.daylight, ps, &ps))
-           goto Exit; /* TZ format error :o( */
+      if(!read_TZ_rules (&zi.daylight, ps, &ps))
+         goto Exit; /* TZ format error :o( */
 
-       if(!read_TZ_rules (&zi.standard, ps, &ps))
-           goto Exit; /* TZ format error :o( */
+      if(!read_TZ_rules (&zi.standard, ps, &ps))
+         goto Exit; /* TZ format error :o( */
 
-       zi.type = 2; /* standard time if there is no following data */
+      zi.type = 2; /* standard time if there is no following data */
    }
 
    pzi->type = 0;

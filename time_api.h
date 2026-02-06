@@ -8,7 +8,7 @@
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
-*  COPYRIGHT:    (c) 2025 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
+*  COPYRIGHT:    (c) 2026 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
@@ -75,7 +75,8 @@
 #ifndef TIME_API_H
 #define TIME_API_H
 
-#include <stdint.h>    /* int64_t etc. */
+#include <stdint.h> /* int64_t etc. */
+#include <time.h>   /* struct tm and localtime_r */
 
 #ifdef __cplusplus
 extern "C" {

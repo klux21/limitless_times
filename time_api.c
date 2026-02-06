@@ -1656,11 +1656,9 @@ struct tm * localtime_of_zone(time64_t utc_time, struct tm * ptm, const TIME_ZON
       ptz = &ptzi->standard;
    }
 
-   utc_time -= ptz->bias;
-
    if(ptm)
    {
-      struct tm * ptm_ret = new_gmtime_r(utc_time, ptm);
+      struct tm * ptm_ret = new_gmtime_r(utc_time - ptz->bias, ptm);
       ptm->tm_isdst = isDaylightSaving; /* set summer time flag */
 
 #if defined __TM_ZONE || (defined (_POSIX_VERSION) && (_POSIX_VERSION  >= 202405))

@@ -116,7 +116,7 @@
 #if defined (_WIN32) || defined (__CYGWIN__)
 
 /* ------------------------------------------------------------------------- *\
-   unix_time returns the Unix time stamp in microsecond.
+   unix_time returns the Unix time stamp in microseconds.
    (UTC time since 01/01/1970) The precision depends on the system.
 \* ------------------------------------------------------------------------- */
 
@@ -125,7 +125,7 @@ static HMODULE hmKernel32Dll = (HMODULE) -1;
 
 int64_t unix_time()
 {
-   int64_t iRet;
+   int64_t tm;
    FILETIME CurrentTime;
 
    if(vGetSystemTimePreciseAsFileTime)
@@ -148,31 +148,106 @@ int64_t unix_time()
       GetSystemTimeAsFileTime(&CurrentTime);
    }
 
-   iRet  = ((int64_t) CurrentTime.dwHighDateTime << 32);
-   iRet += (int64_t)  CurrentTime.dwLowDateTime;
-   iRet -= (int64_t)  116444736 * 1000000 * 1000; /* offset of Windows FileTime to start of Unix time */
-   return (iRet / 10);
+   tm  = ((int64_t) CurrentTime.dwHighDateTime << 32);
+   tm += (int64_t)  CurrentTime.dwLowDateTime;
+   tm -= (int64_t)  116444736 * 1000000 * 1000; /* offset of Windows FileTime to start of Unix time */
+   return (tm / 10);
 }/* int64_t unix_time() */
+
+
+/* ------------------------------------------------------------------------- *\
+   unix_time_ns returns the Unix time stamp in nanoseconds.
+   (UTC time since 01/01/1970) The precision depends on the system.
+\* ------------------------------------------------------------------------- */
+
+int64_t unix_time_ns()
+{
+   int64_t tm;
+   FILETIME CurrentTime;
+
+   if(vGetSystemTimePreciseAsFileTime)
+   {
+      vGetSystemTimePreciseAsFileTime(&CurrentTime);
+   }
+   else if(hmKernel32Dll == (HMODULE) -1)
+   { /* 1rst call */
+      hmKernel32Dll = LoadLibrary("Kernel32.dll");
+      if(hmKernel32Dll)
+         vGetSystemTimePreciseAsFileTime = (void (WINAPI * )(LPFILETIME)) GetProcAddress(hmKernel32Dll, "GetSystemTimePreciseAsFileTime");
+
+      if(vGetSystemTimePreciseAsFileTime)
+         vGetSystemTimePreciseAsFileTime(&CurrentTime);
+      else
+         GetSystemTimeAsFileTime(&CurrentTime);
+   }
+   else
+   {
+      GetSystemTimeAsFileTime(&CurrentTime);
+   }
+
+   tm  = ((int64_t) CurrentTime.dwHighDateTime << 32);
+   tm += (int64_t)  CurrentTime.dwLowDateTime;
+   tm -= (int64_t)  116444736 * 1000000 * 1000; /* offset of Windows FileTime to start of Unix time */
+   return (tm * 100);
+}/* int64_t unix_time_ns() */
 
 #else
 
+/* ------------------------------------------------------------------------- *\
+   unix_time returns the Unix time stamp in microseconds.
+   (UTC time since 01/01/1970) The precision depends on the system.
+\* ------------------------------------------------------------------------- */
+
 int64_t unix_time()
 {
-   int64_t tRet;
-   struct timeval tv;
+   int64_t tm;
+   struct timespec ts;
 
-   gettimeofday(&tv, NULL);
-
-   tRet = (int64_t) tv.tv_sec;
-
-   /* Try to turn the year 2038 problem into a year 2106 problem. */
-   if((sizeof(tv.tv_sec) <= 4) && (tv.tv_sec < 0))
-      tRet += (int64_t) 0x80000000ul + (int64_t) 0x80000000ul;
-
-   tRet *= 1000000ul;
-   tRet += tv.tv_usec;
-   return (tRet);
+   if(0 >= clock_gettime(CLOCK_REALTIME, &ts))
+   {
+      tm = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+   }
+   else
+   {
+      struct timeval tv;
+      gettimeofday(&tv, NULL);
+      tm = (int64_t) tv.tv_sec;
+      if((sizeof(time_t) <= 4) && (tv.tv_sec < 0))
+         tm += (int64_t) 0x80000000ul + (int64_t) 0x80000000ul; /* handle year 2038 problem by making it a year 2106 problem */
+      tm *= 1000000ul;
+      tm += tv.tv_usec;
+   }
+   return (tm);
 }/* int64_t unix_time() */
+
+
+/* ------------------------------------------------------------------------- *\
+   unix_time_ns returns the Unix time stamp in nanoseconds.
+   (UTC time since 01/01/1970) The precision depends on the system.
+\* ------------------------------------------------------------------------- */
+
+int64_t unix_time_ns()
+{
+   int64_t tm;
+   struct timespec ts;
+
+   if(0 >= clock_gettime(CLOCK_REALTIME, &ts))
+   {
+      tm = ts.tv_sec * 1000000000ul + ts.tv_nsec;
+   }
+   else
+   {
+      struct timeval tv;
+      gettimeofday(&tv, NULL);
+      tm = (int64_t) tv.tv_sec;
+      if((sizeof(time_t) <= 4) && (tv.tv_sec < 0))
+         tm += (int64_t) 0x80000000ul + (int64_t) 0x80000000ul; /* handle year 2038 problem by making it a year 2106 problem */
+      tm *= 1000000000ul;
+      tm += tv.tv_sec * 1000;
+   }
+   return (tm);
+}/* int64_t unix_time_ns() */
+
 #endif
 
 

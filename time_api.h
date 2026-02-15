@@ -89,10 +89,16 @@ typedef int64_t  time64_t;
 #endif
 
 /* ------------------------------------------------------------------------- *\
-   unix_time returns the Unix time in microsecond.
+   unix_time returns the Unix time in microseconds.
    (UTC time since 01/01/1970) The precision depends on the system.
 \* ------------------------------------------------------------------------- */
 int64_t unix_time();
+
+/* ------------------------------------------------------------------------- *\
+   unix_time_ns returns the Unix time in nanoseconds.
+   (UTC time since 01/01/1970) The precision depends on the system.
+\* ------------------------------------------------------------------------- */
+int64_t unix_time_ns();
 
 /* ------------------------------------------------------------------------- *\
    week_of_year returns the calendar week of a given date

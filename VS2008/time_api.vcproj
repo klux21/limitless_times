@@ -316,7 +316,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories=".,..,../zones,../Win32"
 				PreprocessorDefinitions="MEMORY_CHECK=1;WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"

@@ -5,8 +5,8 @@
 /* Generic version number stuff */
 
 /* global define of version number digits */
-#define VERSION_1  1
-#define VERSION_2  5
+#define VERSION_1  2
+#define VERSION_2  3
 #define VERSION_3  0
 #define VERSION_4  0
 

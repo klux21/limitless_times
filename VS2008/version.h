@@ -1,12 +1,12 @@
 /* Copyright string in product ressource information */
 #define COPYRIGHT_HOLDER "Dipl.-Ing. Klaus Lux (Aachen, Germany)"
-#define COPYRIGHT_STRING "\xA9 2024 " COPYRIGHT_HOLDER
+#define COPYRIGHT_STRING "\xA9 2026 " COPYRIGHT_HOLDER
 
 /* Generic version number stuff */
 
 /* global define of version number digits */
 #define VERSION_1  2
-#define VERSION_2  3
+#define VERSION_2  4
 #define VERSION_3  0
 #define VERSION_4  0
 

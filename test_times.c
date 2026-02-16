@@ -236,23 +236,8 @@ int test_time_range()
 #ifdef _WIN32
 #define mkgmtime _mkgmtime
 //#define timegm   mkgmtime
-
-/* gmtime and localtime are threadsafe implemented in Windows */
-struct tm * gmtime_r(const time_t * pt, struct tm * ptm)
-{
-   struct tm * pgt = gmtime(pt);
-   if (pgt)
-       *ptm = *pgt;
-   return (ptm);
-} /* struct tm * gmtime_r(const time_t * pt, struct tm * ptm */
-
-struct tm * localtime_r(const time_t * pt, struct tm * ptm)
-{
-   struct tm * pgt = localtime(pt);
-   if (pgt)
-       *ptm = *pgt;
-   return (ptm);
-} /* struct tm * localtime_r(const time_t * pt, struct tm * ptm */
+#define gmtime_r(pt, ptm) gmtime_s(ptm, pt)
+#define localtime_r(pt, ptm) localtime_s(ptm, pt)
 #endif
 
 

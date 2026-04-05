@@ -1,4 +1,4 @@
-limitless_times - time handling functions to overcome some annoying limits
+limitless_times - functions to overcome annoying limits of the C time functions
 
 It did bother me a while that the common time functions in C are usually not
 only slow but that the common implementations don't even support any dates and
@@ -81,7 +81,7 @@ other people without their agreement or their health or life being endangered.
 That's fine for most software but usually not for military devices, weapons or
 spyware. It would be great if more projects would adapt this license as well.
 The list of time zones remains public domain as in the IANA time-zone database
-version 2025b https://www.iana.org/time-zones.
+version 2026a https://www.iana.org/time-zones.
 
 Life is great once there are less limits and problems and for this it's about
 time for limitless times now.

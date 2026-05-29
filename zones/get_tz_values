@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# (c) 2024 Dipl.-Ing. Klaus Lux (Aachen, Germany)
+# (c) 2026 Dipl.-Ing. Klaus Lux (Aachen, Germany)
 # 
 # This script is nothing but a first hack for extracting a list of the TZ values of the different
 # locations from the time zone database of a Linux or BSD system. 

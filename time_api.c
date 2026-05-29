@@ -90,10 +90,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#ifdef __CYGWIN__
-#include <windows.h>
-#undef _WIN32
-#endif
 #endif/* #ifdef _WIN32 */
 
 #ifdef _WIN32

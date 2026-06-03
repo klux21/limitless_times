@@ -400,7 +400,7 @@ int calendar_week_of_time(time64_t tt)
    struct tm stm;
 
    memset(&stm, 0, sizeof(stm));
-   new_gmtime_r(tt, &stm);
+   new_localtime_r(tt, &stm);
    kw_ret = calendar_week_of_year(&stm);
 
    return (kw_ret);
@@ -1143,7 +1143,7 @@ static int read_TZ_rules (TIME_ZONE_RULE * ptr, char * psrc, char ** ppend)
    ptzi points to is unchanged.
 \* ------------------------------------------------------------------------- */
 
-int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
+int read_TZ (TIME_ZONE_INFO * ptzi, const char * pTZ)
 {
    int     bRet = 0;
    TIME_ZONE_INFO zi;
@@ -1151,7 +1151,7 @@ int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
 
    memset(&zi, 0, sizeof(zi));
 
-   if (!pzi || !ps)
+   if (!ptzi || !ps)
       goto Exit; /* internal program error :o( */
 
    if (*ps == ':')
@@ -1179,8 +1179,8 @@ int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ)
       zi.type = 2; /* standard time if there is no following data */
    }
 
-   pzi->type = 0;
-   *pzi = zi;
+   ptzi->type = 0;
+   *ptzi = zi;
    bRet = 1;
 
    Exit:;

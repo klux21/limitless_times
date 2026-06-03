@@ -258,7 +258,7 @@ struct TIME_ZONE_INFO_S
    If the function fails because of an invalid string then the storage that
    ptzi points to is unchanged.
 \* ------------------------------------------------------------------------- */
-int read_TZ (TIME_ZONE_INFO * pzi, const char * pTZ);
+int read_TZ (TIME_ZONE_INFO * ptzi, const char * pTZ);
 
 
 /* ------------------------------------------------------------------------- *\

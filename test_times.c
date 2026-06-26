@@ -12,16 +12,15 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . -I zones test_times.c tim
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
-*                                                                             *
-*  COPYRIGHT:    (c) 2025 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
-*                                                                             *
-* --------------------------------------------------------------------------- *
-*                                                                             *
-*  ORIGIN:       https://github/klux21/limitless_times                        *
+*  COPYRIGHT:    (c) 2026 Dipl.-Ing. Klaus Lux (Aachen, Germany)              *
 *                                                                             *
 * --------------------------------------------------------------------------- *
 *                                                                             *
-* Civil Usage Public License, Version 1.1, January 2024                       *
+*  ORIGIN:       https://github.com/klux21/limitless_times                    *
+*                                                                             *
+* --------------------------------------------------------------------------- *
+*                                                                             *
+* Civil Usage Public License, Version 1.2, June 2026                          *
 *                                                                             *
 * Redistribution and use in source and binary forms, with or without          *
 * modification, are permitted provided that the following conditions are met: *
@@ -60,7 +59,7 @@ rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . -I zones test_times.c tim
 * of data storage.                                                            *
 *                                                                             *
 * The term 'devices' shall include any kind of local or non-local control     *
-* system of the stated devices as part of that device als well. Any assembly  *
+* system of the stated devices as part of that device as well. Any assembly   *
 * of more than one device is one and the same device regarding this license.  *
 *                                                                             *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" *

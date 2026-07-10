@@ -4,10 +4,10 @@ It bothered me for a while that the common time functions in C are usually not
 only slow but that the common implementations don't even support any dates and
 times before 1970 because they are usually unable to handle negative time_t
 values. Even worse there exists that nightmare of the daylight saving rules all
-over the world and a thread safe conversion between the the times of different
+over the world and a thread safe conversion between the times of different
 time zones is a pretty hard thing to do. The math itself is not that difficult
 of course as long as you know the time offsets and the daylight saving rules.
-As for me I did just want some fast, reliable and portable functions for my
+As for me, I just wanted some fast, reliable and portable functions for my
 applications and especially for my network loggings in the several systems all
 over the world.
 
@@ -32,10 +32,10 @@ multi-thread execution." That's why it's pretty dangerous to use those
 functions in big multi-threaded and portable software projects if any time zone
 adjustments or conversions at runtime need to be done.
 
-For being thread safe you just need a call of `update_time_zone_info` before
-creating any threads. In case that you need changes of TZ or your local time
-zone at random times once your process is running you have to provide an own
-mutex lock and unlock function for a call of `init_time_api_lock`.
+For being thread safe you need to call `update_time_zone_info` before creating
+any threads. In case that you need changes of TZ or your local time zone at
+random times once your process is running you have to provide an own mutex lock
+and unlock function for a call of `init_time_api_lock`.
 
 Since version 2.1 only `time64_t` instead of `time_t` values are used. This should
 cause compiler warnings if a 32 bit time_t is used for storing the return
@@ -45,9 +45,9 @@ the pointers outside of the function calls now and are able to handle 32 bit
 and 64 bit input pointer values now. Of course the best fix of the year 2038
 problems is to use 64 bit software or at least 64 bit time_t values only.
 
-The support of the daylight saving rules is not that funny to implement but
+The support of the daylight saving rules is not that fun to implement but
 the functions `new_mktime` and `new_localtime_r` here should handle them right
-as long as the environment variable `TZ` is set correctly.
+now as long as the environment variable `TZ` is set correctly.
 
 The default value is searched in /etc/localtime if that file exists as common
 in many Unix systems. The algorithm doesn't care the true binary format of
@@ -71,9 +71,9 @@ in a few ten thousand years after the earth rotation has slowed down a bit more
 the times will match again either and so it seems rather an academic problem.
 
 For testing the functions and comparing the speed with the compiler build-in
-functions you may execute run_tests.sh in Linux, BSD or Cygwin or other Unix
-systems with C compiler. There exist a little Visual Studio Project for
-Windows as well.
+functions you can execute run_tests.sh in a console of Linux, BSD or Cygwin
+or other Unix systems that has C compiler. There exist a little Visual Studio
+Project for Windows as well now.
 
 The license is kind of a mix of BSD and Apache conditions but in opposite to
 those it prohibits a usage for weapons and spyware and a secret monitoring of

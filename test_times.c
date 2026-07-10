@@ -1,7 +1,3 @@
-#if 0
-rm -f ./_test_times ; cc -Wall -O3 -o _test_times -I . -I zones test_times.c time_api.c zones/tz_value.c ; ./_test_times ; exit $?
-#endif
-
 /*****************************************************************************\
 *                                                                             *
 *  FILENAME:     time_test.c                                                  *

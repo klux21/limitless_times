@@ -33,9 +33,9 @@ functions in big multi-threaded and portable software projects if any time zone
 adjustments or conversions at runtime need to be done.
 
 For being thread safe you need to call `update_time_zone_info` before creating
-any threads. In case that you need changes of TZ or your local time zone at
-random times once your process is running you have to provide an own mutex lock
-and unlock function for a call of `init_time_api_lock`.
+any threads. If you need to change TZ or your local time zone at random times
+once your process is running you have to provide an own mutex lock and unlock
+function for a call of `init_time_api_lock`.
 
 Since version 2.1 only `time64_t` instead of `time_t` values are used. This should
 cause compiler warnings if a 32 bit time_t is used for storing the return
@@ -71,7 +71,7 @@ in a few ten thousand years after the earth rotation has slowed down a bit more
 the times will match again either and so it seems rather an academic problem.
 
 For testing the functions and comparing the speed with the compiler build-in
-functions you can execute run_tests.sh in a console of Linux, BSD or Cygwin
+functions you can execute run_tests.sh within a console of Linux, BSD or Cygwin
 or other Unix systems that has C compiler. There exist a little Visual Studio
 Project for Windows as well now.
 

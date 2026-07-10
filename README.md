@@ -1,4 +1,4 @@
-## limitless_times - functions to overcome annoying limits of the C time functions
+## limitless_times - functions to overcome the limits of the C time functions
 
 It did bother me a while that the common time functions in C are usually not
 only slow but that the common implementations don't even support any dates and

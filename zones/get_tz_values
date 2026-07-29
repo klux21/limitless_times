@@ -81,7 +81,7 @@ then
             echo "      {\"${z}\", \"$(tail -1 < ${zl} )\" },"
         fi
     done
-fi | sort >> tz_value.c
+fi | sort -f >> tz_value.c
 
 
 echo '      { NULL, NULL }}; /* termination of array */

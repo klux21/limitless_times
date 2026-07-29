@@ -63,12 +63,13 @@ echo \
 TZ_VALUE timezones[] = {'\
  > tz_value.c
 
-
-
 if [ -z "${ZONEINFO}" ]
 then
     ZONEINFO=/usr/share/zoneinfo
 fi
+
+# ensure locale independent sorting
+export LC_ALL=C
 
 if [ -d ${ZONEINFO}/posix ]
 then

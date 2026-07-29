@@ -2,7 +2,7 @@
 
 ## limitless_times_2.4.7 / 2026-07-29
  - zones of Alberta and Morocco adjusted
- - uses locale independent sorting order of time zones in tz_value.c now
+ - locale independent and case insensitive sorting order of time zones in tz_value.c
 
 ## limitless_times_2.4.6 / 2026-07-10
  - CHANGELOG.md added

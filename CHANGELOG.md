@@ -1,5 +1,9 @@
 # Changelog of klux21/limitless_times
 
+## limitless_times_2.4.7 / 2026-07-29
+ - zones of Alberta and Morocco adjusted
+ - uses locale independent sorting order of time zones in tz_value.c now
+
 ## limitless_times_2.4.6 / 2026-07-10
  - CHANGELOG.md added
  - initial version of run_tests.sh

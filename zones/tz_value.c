@@ -145,7 +145,7 @@ TZ_VALUE timezones[] = {
       {"America/Indiana/Vincennes", "EST5EDT,M3.2.0,M11.1.0" },
       {"America/Indiana/Winamac", "EST5EDT,M3.2.0,M11.1.0" },
       {"America/Indianapolis", "EST5EDT,M3.2.0,M11.1.0" },
-      {"America/Inuvik", "MST7MDT,M3.2.0,M11.1.0" },
+      {"America/Inuvik", "CST6" },
       {"America/Iqaluit", "EST5EDT,M3.2.0,M11.1.0" },
       {"America/Jamaica", "EST5" },
       {"America/Jujuy", "<-03>3" },

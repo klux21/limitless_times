@@ -1,5 +1,8 @@
 # Changelog of klux21/limitless_times
 
+## limitless_times_2.4.8 / 2026-09-24
+ - zone of Inuvik adjusted according IANA tzdb 2026d
+
 ## limitless_times_2.4.7 / 2026-07-29
  - zones of Alberta and Morocco adjusted
  - locale independent and case insensitive sorting order of time zones in tz_value.c
